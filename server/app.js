@@ -6,6 +6,7 @@ import { connectDB } from './db/connection.js'
 import ChatRoute from './routes/chat.js'
 import UserRoute from './routes/user.js'
 import path from 'path'
+import {createUser} from "./init-mongo.js";
 
 dotnet.config()
 
@@ -39,4 +40,11 @@ connectDB((err) => {
         console.log("server started",port)
     })
 })
+
+createUser((err) => {
+    if (err) {
+        console.log("error creating users")
+    }
+})
+
 

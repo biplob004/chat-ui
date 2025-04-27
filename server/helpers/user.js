@@ -173,6 +173,7 @@ export default {
                 .catch((err) => {
                     reject(err)
                 })
+            console.log("user found ? ",user);
 
             if (user) {
                 if (manual === 'false') {
