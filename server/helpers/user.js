@@ -176,7 +176,7 @@ export default {
             console.log("user found ? ",user);
 
             if (user) {
-                if (manual === 'false') {
+                if (manual === 'true') {
                     delete user.pass
                     resolve(user)
                 } else {

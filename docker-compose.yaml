@@ -11,6 +11,7 @@ services:
     environment:
       - PORT=3000
       - DB_URL=mongodb://host.docker.internal:27017/chatGPT
+      - JWT_PRIVATE_KEY=strong_private_key
       - SMTP_HOST=smtp.example.com
       - SMTP_USER=username
       - SMTP_PASS=password
