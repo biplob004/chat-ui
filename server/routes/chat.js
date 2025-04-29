@@ -4,6 +4,9 @@ import axios from "axios";
 import user from '../helpers/user.js'
 import jwt from 'jsonwebtoken'
 import chat from "../helpers/chat.js";
+import FormData from 'form-data';
+import multer from 'multer';
+const upload = multer(); // default: in-memory
 
 dotnet.config()
 
@@ -51,55 +54,37 @@ router.get('/', (req, res) => {
     res.send("Welcome to chatGPT api v1")
 })
 
-router.post('/', CheckUser, async (req, res) => {
-    const { prompt, userId } = req.body;
-  
-    let response = {};
+router.post('/', CheckUser, upload.none(), async (req, res) => {
+    const { message , chatId , auth_token  } = req.body;
+    console.log("post chat req ", req.body);
+    const chatUrl = 'http://44.223.52.172:8000/api/chatbot';
+
     try {
-      // Call Claude API
-      const apiResponse = await axios.post(
-        process.env.CLAUDE_API_URL,
-        {
-          model: 'claude-3-sonnet-20240229', // Specify the desired model
-          max_tokens: 200,
-          temperature: 0.7,
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            'x-api-key': process.env.CLAUDE_API_KEY,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      
-      console.log(apiResponse.data.content[0].text)
-      // Extract Claude's response text
-      const claudeText = apiResponse?.data?.content[0]?.text?.trim();
-  
-      if (claudeText) {
-        // Remove leading newlines
-        response.openai = claudeText.replace(/^\n+/, '');
-  
-        // Save the response to your database
-        response.db = await chat.newResponse(prompt, response.openai, userId);
-  
-        // Send success response
-        res.status(200).json({
-          status: 200,
-          message: 'Success',
-          data: {
-            _id: response.db?.chatId,
-            content: response.openai,
-          },
-        });
-      } else {
-        throw new Error('Claude API returned an empty response.');
-      }
+        let data = new FormData();
+        data.append('message', message);
+        data.append('chat_id', chatId);
+        data.append('auth_token', auth_token);
+
+        // Proxy the request to external API
+        const externalRequest = await axios.post(
+            chatUrl,
+            data,
+            {
+                headers: data.getHeaders(),
+                responseType: 'stream', // important: tells axios to handle it as stream
+            }
+        );
+
+        // Set appropriate headers for client
+        res.setHeader('Content-Type', externalRequest.headers['content-type'] || 'text/event-stream');
+
+        // Pipe the response from external API to client
+        externalRequest.data.pipe(res);
+
+
     } catch (error) {
       // Log the error for debugging
-      console.error('Error calling Claude API:', error);
+      console.error('Error calling external API:', error);
   
       // Send error response
       res.status(500).json({
@@ -197,7 +182,7 @@ router.get('/saved', CheckUser, async (req, res) => {
     }
 })
 
-router.get('/history', CheckUser, async (req, res) => {
+router.get('/history',  async (req, res) => {
     const { userId } = req.body
 
     let response = null
