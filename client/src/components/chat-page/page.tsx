@@ -87,7 +87,7 @@ const ChatApp: React.FC = () => {
       formData.append("chatId", chatId);
       formData.append("auth_token", authToken);
 
-      const response = await fetch("/api/chatbot", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         body: formData,
         headers: {

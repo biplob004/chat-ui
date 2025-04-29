@@ -4,6 +4,9 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import axios from "axios";
 import { Box, Button, useTheme } from "@mui/material";
 
+// const baseURL = 'http://localhost:3000';
+import instance from '../../config/instance'
+
 interface Props {
   auth_token: string;
   activeChatId: string;
@@ -17,11 +20,12 @@ const ChatHistory = ({ auth_token, activeChatId, loadMessages }: Props) => {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
-        const response = await axios.post("/api/history_list", {
+        // const response = await instance.get(`${baseURL}/api/chat/history`)
+        const response = await axios.post("/api/chat/history", {
           auth_token: auth_token,
         });
-        console.log(response.data.history_list);
-        setChatHistory(response.data.history_list);
+        console.log(response.data.history);
+        setChatHistory(response.data.history);
       } catch (error) {
         console.error("Error retrieving chat history:", error);
       }
