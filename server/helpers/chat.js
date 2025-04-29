@@ -1,6 +1,7 @@
 import { db } from "../db/connection.js";
 import collections from "../db/collections.js";
 import { ObjectId } from "mongodb";
+import axios from "axios";
 
 export default {
     newResponse: (prompt, openai , userId) => {
@@ -102,40 +103,24 @@ export default {
             }
         })
     },
-    getHistory: (userId) => {
-        return new Promise(async (resolve, reject) => {
-            let res = await db.collection(collections.CHAT).aggregate([
-                {
-                    $match: {
-                        user: userId.toString()
-                    }
-                }, {
-                    $unwind: '$data'
-                }, {
-                    $project: {
-                        _id: 0,
-                        chatId: '$data.chatId',
-                        prompt: {
-                            $arrayElemAt: ['$data.chats.prompt', 0]
-                        }
-                    }
-                }, {
-                    $limit: 10
-                }, {
-                    $sort: {
-                        chatId: -1
-                    }
-                }
-            ]).toArray().catch((err) => {
-                reject(err)
-            })
+    getHistory: async (userId) => {
+        const data = JSON.stringify({
+            "chat_id": "088308b9-1a2f-4e98-9eb9-69f02d254123",
+            "auth_token": "admin_123"
+        });
+        const config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: 'http://44.223.52.172:8000/api/retrieve_messages',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            data : data
+        };
+        const apiResponse = await axios(config);
 
-            if (Array.isArray(res)) {
-                resolve(res)
-            } else {
-                reject({ text: "DB Getting Some Error" })
-            }
-        })
+        return apiResponse.data;
     },
     deleteAllChat: (userId) => {
         return new Promise((resolve, reject) => {
