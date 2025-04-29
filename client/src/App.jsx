@@ -6,6 +6,8 @@ import { Error, Forgot, Login, Main, Signup } from "./page";
 import { useSelector } from "react-redux";
 import ProtectedRoute from "./protected";
 import Loading from "./components/loading/loading";
+import ChatApp from "./components/chat-page/page";
+import { ThemeProviderComponent } from "./components/chat-page/ThemeContext";
 
 const App = () => {
   const [offline, setOffline] = useState(!window.navigator.onLine);
@@ -48,13 +50,13 @@ const App = () => {
 
   return (
     <section className={user ? "main-grid" : null}>
-      {user && (
+      {/* {user && (
         <div>
           <Menu changeColorMode={changeColorMode} />
         </div>
       )}
 
-      {loading && <Loading />}
+      {loading && <Loading />} */}
 
       {offline && (
         <Error
@@ -65,7 +67,15 @@ const App = () => {
 
       <Routes>
         <Route element={<ProtectedRoute offline={offline} authed={true} />}>
-          <Route exact path="/" element={<Main />} />
+          <Route
+            exact
+            path="/"
+            element={
+              <ThemeProviderComponent>
+                <ChatApp />
+              </ThemeProviderComponent>
+            }
+          />
           <Route path="/chat" element={<Main />} />
           <Route path="/chat/:id" element={<Main />} />
         </Route>

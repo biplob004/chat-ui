@@ -146,6 +146,8 @@ const Menu = ({ changeColorMode }) => {
         </div>
       </header>
 
+      <RecentChats/>
+
       <div className="menu" ref={menuRef}>
         <div>
           <button

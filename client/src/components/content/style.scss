@@ -315,3 +315,67 @@
         }
     }
 }
+
+
+// New chat page
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    border-bottom: 1px solid #f1f1f1 !important;
+  
+    .logo {
+      width: 250px;
+    }
+  }
+  
+  .buttons-wrapper {
+    display: flex;
+    gap: 10px;
+  
+    .button {
+      height: 100%;
+      aspect-ratio: 1;
+      padding: 12px;
+      border-radius: 12px;
+    }
+  }
+  
+  .chat-controls-wrapper {
+    padding: 10px;
+    width: 20vw;
+    Button {
+      border-radius: 12px;
+    }
+  }
+
+  .chat-window-container {
+    width: 80vw;
+  }
+  
+  .chat-ai-spinner-wrap {
+    position: absolute;
+    left: -40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+
+
+  // css
+
+  .flex {
+    display: flex;
+  }
+
+  .h-screen {
+    height: 100vh;
+  }

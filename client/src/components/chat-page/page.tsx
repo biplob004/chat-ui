@@ -1,0 +1,394 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import ChatWindow from "./ChatWindow";
+import ChatInput from "./ChatInput";
+import { Message } from "./constants";
+import ChatHistory from "./ChatHistory";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+import { Button, Box, useTheme, Typography, IconButton } from "@mui/material";
+import { useThemeContext } from "./ThemeContext";
+import { generateDashboardMessage, generateStatusTable } from "./constants";
+import "../content/style.scss";
+
+import SearchIcon from "@mui/icons-material/Search";
+import CreateIcon from "@mui/icons-material/Create";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import RecentChats from "./RecentChat";
+
+const ChatApp: React.FC = () => {
+  const theme = useTheme();
+  console.log('theme:', theme)
+  const { toggleTheme, mode } = useThemeContext();
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: Date.now().toString(),
+      content:
+        "Hello, this is Becky, your Real Estate AI Assistant. How can I help you today? I can start by creating a new deal, or you can ask me about existing deals or what needs to be done for today",
+      isSentByUser: false,
+      fileNames: [],
+      avatarUrl: "/chat-gpt-icon.png",
+    },
+  ]);
+  const [chatId, setChatId] = useState<string>(uuidv4());
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [authToken, setAuthToken] = useState<string>("admin_123");
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTo({
+        top: chatWindowRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages]);
+
+  const handleSendMessage = async (message: string, files?: File[]) => {
+    try {
+      const formData = new FormData();
+      const fileNames: string[] = [];
+
+      // Append multiple files with the same field name
+      files?.forEach((file) => {
+        formData.append(`files`, file);
+        fileNames.push(file.name);
+      });
+
+      // Adding files in message
+      // message =
+      //   message +
+      //   (fileNames.length > 0
+      //     ? "\nUploaded files are:\n - " + fileNames.join("\n - ")
+      //     : "");
+
+      message =
+        message +
+        (fileNames.length > 0
+          ? "\nUploaded filename: " + fileNames.join("\n")
+          : "");
+
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        content: message, // todo: Here you can remove @string for command text
+        isSentByUser: true,
+        fileUrls: files?.map((file) => URL.createObjectURL(file)),
+        fileNames: files?.map((file) => file.name) || [],
+      };
+
+      setMessages((prev) => [...prev, newMessage]);
+
+      formData.append("message", message);
+
+      formData.append("chatId", chatId);
+      formData.append("auth_token", authToken);
+
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "text/event-stream",
+        },
+      });
+
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let isDone = false;
+
+      while (!isDone) {
+        const { value, done } = await reader.read();
+        isDone = done;
+
+        if (value) {
+          const jsonStrings = decoder
+            .decode(value, { stream: true })
+            // .replace(/\\/g, "\\\\")
+            .split(/(?<=\})\s*(?=\{)/);
+
+          jsonStrings.forEach((jsonString) => {
+            try {
+              const stream_data = JSON.parse(jsonString);
+
+              console.log(stream_data);
+
+              if (
+                (stream_data.status === "node_stream" ||
+                  stream_data.status === "custom_stream" ||
+                  stream_data.status === "interrupted_msg") &&
+                stream_data.type === "update" &&
+                stream_data.msg != ""
+              ) {
+                setMessages((prev) => {
+                  const updatedMessages = [...prev];
+                  const lastMessage =
+                    updatedMessages[updatedMessages.length - 1];
+                  lastMessage.content = stream_data.msg;
+                  return updatedMessages;
+                });
+              } else if (stream_data.type === "add" && stream_data.msg != "") {
+                let message_ = stream_data.msg;
+                // Check if the message is a special message starting with '@@@'
+                if (stream_data.msg.startsWith("@@@")) {
+                  const jsonString = stream_data.msg.slice(3); // Removing the '@@@' prefix
+                  try {
+                    const specialData = JSON.parse(jsonString);
+                    if (specialData["template"] == "html_dashboard") {
+                      message_ = generateDashboardMessage(
+                        specialData["data"],
+                        theme.palette.mode
+                      );
+                    } else if (specialData["template"] == "status_bar") {
+                      message_ = generateStatusTable(specialData["data"]);
+                    }
+                  } catch (error) {
+                    console.error("Error parsing special JSON:", error);
+                  }
+                }
+
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: uuidv4(),
+                    content: message_,
+                    isSentByUser: false,
+                    fileNames: files?.map((f) => f.name) || [], // Update to array
+                    avatarUrl: "/chat-gpt-icon.png",
+                  },
+                ]);
+              }
+            } catch (error) {
+              console.error("Failed to parse JSON string:", jsonString, error);
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error from server side:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          content: "Error: Could not get a response from the server.",
+          isSentByUser: false,
+          fileNames: files?.map((f) => f.name) || [], // Update to array
+          avatarUrl: "/chat-gpt-icon.png",
+        },
+      ]);
+    }
+  };
+
+  const loadMessages = async (chatId: string) => {
+    try {
+      const response = await axios.post("/api/retrieve_messages", {
+        chatId: chatId,
+        auth_token: authToken,
+      });
+
+      const messages_data = response.data;
+
+      // console.log("Retrieved messages:", messages_data);
+
+      if (messages_data) {
+        setMessages([]);
+        setChatId(chatId);
+
+        messages_data.forEach((msg: { role: string; content: string }) => {
+          // Check if the message is a special message starting with '@@@'
+          let message_ = msg.content;
+          if (msg.content.startsWith("@@@")) {
+            const jsonString = msg.content.slice(3); // Removing the '@@@' prefix
+            try {
+              const specialData = JSON.parse(jsonString);
+              if (specialData["template"] == "html_dashboard") {
+                message_ = generateDashboardMessage(
+                  specialData["data"],
+                  theme.palette.mode
+                );
+              } else if (specialData["template"] == "status_bar") {
+                message_ = generateStatusTable(specialData["data"]);
+              }
+            } catch (error) {
+              console.error("Error parsing special JSON:", error);
+            }
+          }
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: uuidv4(),
+              content: message_,
+              isSentByUser: msg.role == "human" ? true : false,
+              fileNames: [],
+              avatarUrl: msg.role == "human" ? "" : "/chat-gpt-icon.png",
+            },
+          ]);
+        });
+      } else {
+        // couldn't load history msgs
+        setMessages((prevMessages) => {
+          return [prevMessages[0]];
+        });
+      }
+    } catch (error) {
+      console.error("Error retrieving messages:", error);
+    }
+  };
+
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <Box
+        className="w-72 flex flex-col"
+        sx={{ background: theme.palette.side_panel.bg }}
+      >
+        {/* New Chat */}
+
+        {/* top menu buttons */}
+        <Box className="chat-controls-wrapper" display="flex" gap={1}>
+          <IconButton sx={{ transform: "rotate(180deg)" }}>
+            <ExitToAppIcon />
+          </IconButton>
+          <IconButton sx={{ marginLeft: "auto" }}>
+            <SearchIcon />
+          </IconButton>
+          <IconButton>
+            <CreateIcon />
+          </IconButton>
+        </Box>
+
+        {/* Recent chats */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          align-items="flex-start"
+          flexDirection={"column"}
+          p={2}
+        >
+          <Typography variant="h6" fontWeight={600}>
+            Recent chats
+          </Typography>
+          <RecentChats/>
+        </Box>
+        
+        {/* New chat button */}
+
+        <Button
+          onClick={() => {
+            setChatId(uuidv4());
+            setMessages((prevMessages) => {
+              return [prevMessages[0]];
+            });
+          }}
+          sx={{
+            m: 2,
+            color: theme.palette.text.primary,
+            bgcolor: "transparent",
+            border: "1px solid",
+            borderColor: theme.palette.divider,
+            borderRadius: 5,
+            transition: "background-color 0.2s",
+            "&:hover": {
+              bgcolor: theme.palette.side_panel.bg,
+            },
+          }}
+        >
+          + New chat
+        </Button>
+
+        <ChatHistory
+          auth_token={authToken}
+          activeChatId={chatId}
+          loadMessages={loadMessages}
+        />
+
+        <Button
+          onClick={toggleTheme}
+          sx={{
+            m: 2,
+            p: 1.5,
+            color: theme.palette.text.primary,
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            borderRadius: 1,
+            transition: "background-color 0.2s",
+            "&:hover": theme.palette.side_panel.bg,
+          }}
+        >
+          {mode === "light" ? (
+            <>
+              <DarkModeIcon /> Dark Mode
+            </>
+          ) : (
+            <>
+              <LightModeIcon /> Light Mode
+            </>
+          )}{" "}
+        </Button>
+      </Box>
+      {/* Messages */}
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        sx={{ bgcolor: theme.palette.chat_window.bg }}
+      >
+        <Box className="chat-window-container" display="flex" flexDirection="column" height="100vh">
+          <Box
+            className="header"
+            p={1}
+            textAlign="center"
+            borderBottom={1}
+            borderColor="#0000000d"
+          >
+            {mode === "light" ? (
+              <img
+                className="logo"
+                src="/assets/png/airestacks-logo.png"
+                alt="Logo"
+              />
+            ) : (
+              <>
+                <img
+                  className="logo"
+                  src="/assets/png/airestacks-logo-with-moto.png"
+                  alt="Logo"
+                />
+              </>
+            )}
+            {/* <Typography variant="subtitle2" color="text.primary">
+              Unlock operational efficiency, fuel business growth
+            </Typography> */}
+          </Box>
+
+          <Box
+            flex={1}
+            sx={{
+              overflowY: "auto",
+              "&::-webkit-scrollbar": { display: "none" },
+              msOverflowStyle: "none", // IE and Edge
+              scrollbarWidth: "none", // Firefox
+            }}
+            ref={chatWindowRef}
+          >
+            <ChatWindow messages={messages} />
+          </Box>
+
+          <Box flexShrink={0}>
+            <ChatInput handleSendMessage={handleSendMessage} />
+          </Box>
+        </Box>
+      </Box>
+    </div>
+  );
+};
+
+export default ChatApp;
