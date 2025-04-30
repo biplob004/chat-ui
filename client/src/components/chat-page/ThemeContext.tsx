@@ -14,6 +14,7 @@ import {
   PaletteMode,
   CssBaseline,
 } from "@mui/material";
+import { GlobalStyles } from "@mui/material";
 
 // Extend MUI's palette to include a custom colors
 declare module "@mui/material/styles" {
@@ -166,6 +167,24 @@ export const ThemeProviderComponent: React.FC<{
     <ThemeContext.Provider value={{ toggleTheme, mode }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <GlobalStyles
+          styles={{
+            "::-webkit-scrollbar": {
+              width: "8px",
+              height: "8px",
+            },
+            "::-webkit-scrollbar-thumb": {
+              backgroundColor: mode === "light" ? "#e7e7e7" : "#252525",
+              borderRadius: "4px",
+            },
+            "::-webkit-scrollbar-thumb:hover": {
+              backgroundColor: mode === "light" ? "#a0a0a0" : "#333333",
+            },
+            "::-webkit-scrollbar-track": {
+              backgroundColor: mode === "light" ? "#f9f9f9" : "#171717",
+            },
+          }}
+        />
         {children}
       </ThemeProvider>
     </ThemeContext.Provider>

@@ -16,12 +16,20 @@ import "../content/style.scss";
 
 import SearchIcon from "@mui/icons-material/Search";
 import CreateIcon from "@mui/icons-material/Create";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
+
 import RecentChats from "./RecentChat";
+import { useNavigate } from "react-router-dom";
+import instance from "../../config/instance";
+import { useDispatch } from "react-redux";
+import { emptyUser } from "../../redux/user";
 
 const ChatApp: React.FC = () => {
   const theme = useTheme();
-  console.log('theme:', theme)
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const { toggleTheme, mode } = useThemeContext();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -242,11 +250,27 @@ const ChatApp: React.FC = () => {
     }
   };
 
+  const logOut = async () => {
+    if (window.confirm("Do you want log out")) {
+      let res: { data?: { status?: number } } | null = null;
+      try {
+        res = await instance.get(`/api/user/logout`);
+      } catch (err) {
+        alert(err);
+      } finally {
+        if (res?.data?.status === 200) {
+          dispatch(emptyUser(null));
+          navigate("/login");
+        }
+      }
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
       <Box
-        className="w-72 flex flex-col"
+        className="side-menu flex flex-col"
         sx={{ background: theme.palette.side_panel.bg }}
       >
         {/* New Chat */}
@@ -254,12 +278,17 @@ const ChatApp: React.FC = () => {
         {/* top menu buttons */}
         <Box className="chat-controls-wrapper" display="flex" gap={1}>
           <IconButton sx={{ transform: "rotate(180deg)" }}>
-            <ExitToAppIcon />
+            <ViewSidebarOutlinedIcon />
           </IconButton>
           <IconButton sx={{ marginLeft: "auto" }}>
             <SearchIcon />
           </IconButton>
-          <IconButton>
+          <IconButton
+            onClick={() => {
+              // reload the page
+              window.location.reload();
+            }}
+          >
             <CreateIcon />
           </IconButton>
         </Box>
@@ -275,9 +304,9 @@ const ChatApp: React.FC = () => {
           <Typography variant="h6" fontWeight={600}>
             Recent chats
           </Typography>
-          <RecentChats/>
+          <RecentChats />
         </Box>
-        
+
         {/* New chat button */}
 
         <Button
@@ -296,7 +325,7 @@ const ChatApp: React.FC = () => {
             borderRadius: 5,
             transition: "background-color 0.2s",
             "&:hover": {
-              bgcolor: theme.palette.side_panel.bg,
+              bgcolor: theme.palette.side_panel.hover,
             },
           }}
         >
@@ -341,13 +370,19 @@ const ChatApp: React.FC = () => {
         flexDirection="column"
         sx={{ bgcolor: theme.palette.chat_window.bg }}
       >
-        <Box className="chat-window-container" display="flex" flexDirection="column" height="100vh">
+        <Box
+          className="chat-window-container"
+          display="flex"
+          flexDirection="column"
+          height="100vh"
+        >
           <Box
-            className="header"
+            className={`btn ${mode === "light" ? "header white-shadow" : "header shadow"}`}
+            // className="header"
             p={1}
             textAlign="center"
             borderBottom={1}
-            borderColor="#0000000d"
+            borderColor="#8585851a"
           >
             {mode === "light" ? (
               <img
@@ -359,7 +394,7 @@ const ChatApp: React.FC = () => {
               <>
                 <img
                   className="logo"
-                  src="/assets/png/airestacks-logo-with-moto.png"
+                  src="/assets/png/airestacks-logo-white.png"
                   alt="Logo"
                 />
               </>
@@ -367,6 +402,9 @@ const ChatApp: React.FC = () => {
             {/* <Typography variant="subtitle2" color="text.primary">
               Unlock operational efficiency, fuel business growth
             </Typography> */}
+            <IconButton onClick={logOut}>
+              <LogoutIcon />
+            </IconButton>
           </Box>
 
           <Box

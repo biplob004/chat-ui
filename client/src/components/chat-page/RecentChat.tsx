@@ -30,13 +30,13 @@ export default function RecentChats() {
   // }, [auth_token, activeChatId]);
 
   return (
-    <div className='w-auto py-4 overflow-y-auto'>
+    <div className='recent-chat-wrapper w-auto py-3 overflow-y-auto'>
       <ul className='space-y-2 '>
         {chats.map((chat) => (
           <li
             key={chat.id}
             style={{ width: '100%' }}
-            className='p-1 rounded hover:bg-gray-100 cursor-pointer'
+            className='p-1 rounded hover:bg-[#8585851a] cursor-pointer'
           >
             {chat.chatId}
           </li>

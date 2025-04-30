@@ -32,7 +32,6 @@ const Menu = ({ changeColorMode }) => {
         alert(err)
       } finally {
         if (res?.data?.status === 200) {
-          alert("Done")
           dispatch(emptyUser())
           navigate('/login')
         }

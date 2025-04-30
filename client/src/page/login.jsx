@@ -2,7 +2,6 @@ const baseURL = import.meta.env.VITE_API_URL;
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { GptIcon } from "../assets";
 import { LoginComponent } from "../components";
 import { setLoading } from "../redux/loading";
 import "./style.scss";
@@ -42,12 +41,12 @@ const Login = () => {
         ) : (
           <div className="suggection">
             <div>
-              <GptIcon />
+              <img className="login-logo" src="assets\png\gpt-loader.png" />
             </div>
 
             <div>
               <p>Welcome to AireStacks</p>
-              <p>Log in with your OpenAI account to continue</p>
+              <p>Log in with your AireStacks account to continue</p>
             </div>
 
             <div className="btns">
@@ -58,7 +57,7 @@ const Login = () => {
               >
                 Log in
               </button>
-              <button
+              <button className="primary"
                 onClick={() => {
                   navigate("/signup");
                 }}

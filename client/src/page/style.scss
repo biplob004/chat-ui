@@ -517,7 +517,7 @@
           width: 5em;
           height: 3em;
           text-align: center;
-          background: rgba(16, 163, 127, 1);
+          background: #3445a2;
           color: rgba(255, 255, 255, 1);
           border-radius: 0.25rem;
           border: none;
@@ -525,8 +525,16 @@
           transition: all 0.1s ease-in-out;
           -moz-transition: all 0.1s ease-in-out;
 
+          &.primary {
+            background: #1a78df;
+
+            &:hover {
+              background: #006add;
+            }
+          }
+
           &:hover {
-            background: rgba(26, 127, 100, 1);
+            background: #203085;
           }
         }
       }
