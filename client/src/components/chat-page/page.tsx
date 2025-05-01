@@ -42,6 +42,7 @@ const ChatApp: React.FC = () => {
     },
   ]);
   const [chatId, setChatId] = useState<string>(uuidv4());
+  const [loader, setLoader] = React.useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string>("admin_123");
@@ -91,10 +92,11 @@ const ChatApp: React.FC = () => {
       setMessages((prev) => [...prev, newMessage]);
 
       formData.append("message", message);
-
       formData.append("chatId", chatId);
       formData.append("auth_token", authToken);
 
+      setLoader(true); // Show loader when sending message
+      
       const response = await fetch("/api/chat", {
         method: "POST",
         body: formData,
@@ -102,10 +104,11 @@ const ChatApp: React.FC = () => {
           Accept: "text/event-stream",
         },
       });
-
+      
       if (!response.body) {
         throw new Error("Response body is null");
       }
+      setLoader(false);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -200,14 +203,9 @@ const ChatApp: React.FC = () => {
           chatId: chatId,
           authToken: authToken,
         },
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
       });
 
-      const messages_data = response.data;
-      console.log("Retrieved messages:", messages_data);
+      const messages_data = response.data.data;
 
       if (messages_data) {
         setMessages([]);
@@ -290,8 +288,10 @@ const ChatApp: React.FC = () => {
           </IconButton>
           <IconButton
             onClick={() => {
-              // reload the page
-              window.location.reload();
+              setChatId(uuidv4());
+              setMessages((prevMessages) => {
+                return [prevMessages[0]];
+              });
             }}
           >
             <CreateIcon />
@@ -337,11 +337,11 @@ const ChatApp: React.FC = () => {
           + New chat
         </Button>
 
-        <ChatHistory
+        {/* <ChatHistory
           auth_token={authToken}
           activeChatId={chatId}
           loadMessages={loadMessages}
-        />
+        /> */}
 
         <Button
           onClick={toggleTheme}
@@ -355,6 +355,7 @@ const ChatApp: React.FC = () => {
             borderRadius: 1,
             transition: "background-color 0.2s",
             "&:hover": theme.palette.side_panel.bg,
+            marginTop: "auto"
           }}
         >
           {mode === "light" ? (
@@ -422,7 +423,7 @@ const ChatApp: React.FC = () => {
             }}
             ref={chatWindowRef}
           >
-            <ChatWindow messages={messages} />
+            <ChatWindow messages={messages} loader={loader} />
           </Box>
 
           <Box flexShrink={0}>

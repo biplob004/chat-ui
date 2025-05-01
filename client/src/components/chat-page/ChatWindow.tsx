@@ -1,14 +1,19 @@
 import React from "react";
 import { Box } from "@mui/material";
 import ChatMessage from "./ChatMessage";
-
 import { Message } from "./constants";
+
+// import logo from "assets/png/gpt-loader.png";
 
 interface ChatWindowProps {
   messages: Message[];
+  loader?: boolean;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({
+  messages,
+  loader = false,
+}) => {
   return (
     <Box
       display="flex"
@@ -37,6 +42,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
             avatarUrl={avatarUrl}
           />
         )
+      )}
+
+      {/* loader */}
+      {loader && (
+        <img
+          className="chat-ai-spinner"
+          src={"assets/png/gpt-loader.png"}
+          alt="Logo"
+          width={24}
+          height={24}
+        />
       )}
     </Box>
   );
