@@ -152,7 +152,7 @@ router.put('/', CheckUser, async (req, res) => {
   });
 
 router.get('/',  async (req, res) => {
-    const { chatId, authToken } = req.body
+    const { chatId, authToken } = req.query;
 
     let response = null
 

@@ -77,8 +77,8 @@ export default {
     },
     getChat: async (chatId, authToken) => {
         const data = JSON.stringify({
-            "chat_id": "088308b9-1a2f-4e98-9eb9-69f02d254123",
-            "auth_token": "admin_123"
+            "chat_id": chatId,
+            "auth_token": authToken
         });
         const config = {
             method: 'post',
