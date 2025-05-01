@@ -336,6 +336,7 @@
 
   .logo {
     user-select: none;
+    -webkit-user-drag: none;
     width: 250px;
     margin: auto;
   }
@@ -395,6 +396,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      user-select: none;
     }
   }
 }

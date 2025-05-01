@@ -2,15 +2,17 @@ import React, { useEffect } from 'react';
 import { useState } from 'react';
 import instance from '../../config/instance';
 
-export default function RecentChats() {
+interface Props {
+  loadMessages: (chatId: string) => void;
+}
+
+export default function RecentChats({loadMessages }: Props) {
   const [chats, setChats] = useState<{ title: string; id: string }[]>([]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
         const response = await instance.get(`/api/chat/history`);
-        console.log(response.data.data);
-
         setChats(response.data.data);
       } catch (error) {
         console.error('Error retrieving chat history:', error);
@@ -26,6 +28,7 @@ export default function RecentChats() {
       <ul className='space-y-2 '>
         {chats.map((chat) => (
           <li
+            onClick={() => loadMessages(chat.id)}
             key={chat.id}
             style={{ width: '100%' }}
             className='p-1 rounded hover:bg-[#8585851a] cursor-pointer'

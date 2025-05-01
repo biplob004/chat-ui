@@ -50,9 +50,9 @@ const CheckUser = async (req, res, next) => {
 
 
 
-router.get('/', (req, res) => {
-    res.send("Welcome to chatGPT api v1")
-})
+// router.get('/', (req, res) => {
+//     res.send("Welcome to chatGPT api v1")
+// })
 
 router.post('/', CheckUser, upload.none(), async (req, res) => {
     const { message , chatId , auth_token  } = req.body;

@@ -195,14 +195,19 @@ const ChatApp: React.FC = () => {
 
   const loadMessages = async (chatId: string) => {
     try {
-      const response = await axios.post("/api/retrieve_messages", {
-        chatId: chatId,
-        auth_token: authToken,
+      const response = await axios.get("api/chat/", {
+        params: {
+          chatId: chatId,
+          authToken: authToken,
+        },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
       });
 
       const messages_data = response.data;
-
-      // console.log("Retrieved messages:", messages_data);
+      console.log("Retrieved messages:", messages_data);
 
       if (messages_data) {
         setMessages([]);
@@ -304,7 +309,7 @@ const ChatApp: React.FC = () => {
           <Typography variant="h6" fontWeight={600}>
             Recent chats
           </Typography>
-          <RecentChats />
+          <RecentChats loadMessages={loadMessages} />
         </Box>
 
         {/* New chat button */}
