@@ -3,22 +3,14 @@ import { useState } from 'react';
 import instance from '../../config/instance';
 
 export default function RecentChats() {
-  const [chats, setChats] = useState([
-    { id: 1, chatId: 'Chat with us' },
-    { id: 2, chatId: 'New Project Ideas' },
-    { id: 3, chatId: 'Client Meeting Notes' },
-  ]);
+  const [chats, setChats] = useState<{ title: string; id: string }[]>([]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
         const response = await instance.get(`/api/chat/history`);
         console.log(response.data.data);
-        const res = response.data.data;
-        res.forEach((chat: any) => {
-          chat.chatId = chat.content.substring(0, 20);
-        }
-        );
+
         setChats(response.data.data);
       } catch (error) {
         console.error('Error retrieving chat history:', error);
@@ -38,7 +30,7 @@ export default function RecentChats() {
             style={{ width: '100%' }}
             className='p-1 rounded hover:bg-[#8585851a] cursor-pointer'
           >
-            {chat.chatId}
+            {chat.title}
           </li>
         ))}
       </ul>

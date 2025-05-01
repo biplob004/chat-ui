@@ -151,6 +151,29 @@ router.put('/', CheckUser, async (req, res) => {
     }
   });
 
+router.get('/',  async (req, res) => {
+    const { chatId, authToken } = req.body
+
+    let response = null
+
+    try {
+        response = await chat.getChat(chatId, authToken);
+    } catch (err) {
+        res.status(500).json({
+            status: 500,
+            message: err
+        })
+    } finally {
+        if (response) {
+            res.status(200).json({
+                status: 200,
+                message: "Success",
+                data: response
+            })
+        }
+    }
+})
+
 router.get('/saved', CheckUser, async (req, res) => {
     const { userId } = req.body
     const { chatId = null } = req.query
@@ -183,12 +206,12 @@ router.get('/saved', CheckUser, async (req, res) => {
 })
 
 router.get('/history',  async (req, res) => {
-    const { userId } = req.body
+    const { authToken } = req.body
 
     let response = null
 
     try {
-        response = await chat.getHistory(userId)
+        response = await chat.getHistory(authToken)
     } catch (err) {
         res.status(500).json({
             status: 500,

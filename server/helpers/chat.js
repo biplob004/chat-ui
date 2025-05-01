@@ -3,6 +3,8 @@ import collections from "../db/collections.js";
 import { ObjectId } from "mongodb";
 import axios from "axios";
 
+const beckyUrl = "http://44.223.52.172:8000/api";
+
 export default {
     newResponse: (prompt, openai , userId) => {
         return new Promise(async (resolve, reject) => {
@@ -73,37 +75,7 @@ export default {
             }
         })
     },
-    getChat: (userId, chatId) => {
-        return new Promise(async (resolve, reject) => {
-            let res = await db.collection(collections.CHAT).aggregate([
-                {
-                    $match: {
-                        user: userId.toString()
-                    }
-                }, {
-                    $unwind: '$data'
-                }, {
-                    $match: {
-                        'data.chatId': chatId
-                    }
-                }, {
-                    $project: {
-                        _id: 0,
-                        chat: '$data.chats'
-                    }
-                }
-            ]).toArray().catch((err) => [
-                reject(err)
-            ])
-
-            if (res && Array.isArray(res) && res[0]?.chat) {
-                resolve(res[0].chat)
-            } else {
-                reject({ status: 404 })
-            }
-        })
-    },
-    getHistory: async (userId) => {
+    getChat: async (chatId, authToken) => {
         const data = JSON.stringify({
             "chat_id": "088308b9-1a2f-4e98-9eb9-69f02d254123",
             "auth_token": "admin_123"
@@ -111,7 +83,7 @@ export default {
         const config = {
             method: 'post',
             maxBodyLength: Infinity,
-            url: 'http://44.223.52.172:8000/api/retrieve_messages',
+            url: `${beckyUrl}/retrieve_messages`,
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -121,6 +93,24 @@ export default {
         const apiResponse = await axios(config);
 
         return apiResponse.data;
+    },
+    getHistory: async (authToken) => {
+        const data = JSON.stringify({
+            "auth_token": "admin_123"
+        });
+        const config = {
+            method: 'post',
+            maxBodyLength: Infinity,
+            url: `${beckyUrl}/history_list`,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            data : data
+        };
+        const apiResponse = await axios(config);
+
+        return apiResponse.data.history_list;
     },
     deleteAllChat: (userId) => {
         return new Promise((resolve, reject) => {

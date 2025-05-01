@@ -13,19 +13,20 @@ interface Props {
 }
 
 const ChatHistory = ({ auth_token, activeChatId, loadMessages }: Props) => {
-  const [chatHistory, setChatHistory] = useState<{ role: string; content: string; chat_id: string }[]>([]);
+  const [chatHistory, setChatHistory] = useState<{ title: string; id: string }[]>([]);
   const theme = useTheme();
 
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
         const response = await instance.get(`/api/chat/history`);
-        const res = response.data.data;
-        
-        res.forEach((chat: any) => {
-          chat.chat_id = chat.content.substring(0, 6) + chat.role;
-        }
-        );
+        console.log("chat history is ",response)
+        const chatHistory = response.data.data;
+
+        // chatHistory.forEach(({id, title}) => {
+        //   chat.id = chat.content.substring(0, 6) + chat.role;
+        // }
+        // );
 
         setChatHistory(response.data.data);
       } catch (error) {
@@ -40,11 +41,11 @@ const ChatHistory = ({ auth_token, activeChatId, loadMessages }: Props) => {
     try {
       await axios.post('/api/delete_chat', {
         auth_token: auth_token,
-        chat_id: chatId,
+        id: chatId,
       });
 
       setChatHistory((prevChatHistory) =>
-        prevChatHistory.filter((chat) => chat.chat_id !== chatId)
+        prevChatHistory.filter((chat) => chat.id !== chatId)
       );
     } catch (error) {
       console.error('Error deleting chat:', error);
@@ -57,11 +58,11 @@ const ChatHistory = ({ auth_token, activeChatId, loadMessages }: Props) => {
       <div className='px-2 py-1'>
       {chatHistory.map((chat) => (
   <Box
-    key={chat.chat_id}
+    key={chat.id}
     sx={{
       color: theme.palette.text.primary,
       bgcolor:
-        activeChatId == chat.chat_id
+        activeChatId == chat.id
           ? theme.palette.side_panel.active
           : 'transparent',
       '&:hover': { bgcolor: theme.palette.side_panel.hover },
@@ -76,15 +77,15 @@ const ChatHistory = ({ auth_token, activeChatId, loadMessages }: Props) => {
   >
     <div
       className='flex items-center gap-2 flex-1'
-      onClick={() => loadMessages(chat.chat_id)}
+      onClick={() => loadMessages(chat.id)}
     >
-      <ChatIcon fontSize='small' /> {chat.content} {/* or chat.chat_id */}
+      <ChatIcon fontSize='small' /> {chat.title} {/* or chat.id */}
     </div>
-    {chat.chat_id === activeChatId && (
+    {chat.id === activeChatId && (
       <Button
         onClick={(e) => {
           e.stopPropagation();
-          handleDeleteChat(chat.chat_id);
+          handleDeleteChat(chat.id);
         }}
         sx={{
           background: 'transparent',
