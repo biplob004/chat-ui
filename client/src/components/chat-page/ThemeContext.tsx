@@ -24,6 +24,8 @@ declare module "@mui/material/styles" {
       active: string;
       hover: string;
       del_icon_bg: string;
+      primary_btn: string;
+      primary_btn_hover: string;
     };
 
     chat_input: {
@@ -52,6 +54,9 @@ declare module "@mui/material/styles" {
       active: string;
       hover: string;
       del_icon_bg: string;
+      primary_btn: string;
+      primary_btn_hover: string;
+
     };
 
     chat_input: {
@@ -125,10 +130,12 @@ export const ThemeProviderComponent: React.FC<{
             primary: mode === "light" ? "#000000" : "#ffffff",
           },
           side_panel: {
-            bg: mode === "light" ? "#f9f9f9" : "#171717",
+            bg: mode === "light" ? "#eff7ff" : "#171717",
             active: mode === "light" ? "#e8e8e880" : "#343541",
             hover: mode === "light" ? "#e8e8e880" : "#444654",
             del_icon_bg: mode === "light" ? "#f00" : "#f00",
+            primary_btn: mode === "light" ? "#2b449f" : "#313131",
+            primary_btn_hover: mode === "light" ? "#21388b" : "#626262",
           },
           chat_input: {
             bg: mode === "light" ? "#ff0" : "#1e1e1e",

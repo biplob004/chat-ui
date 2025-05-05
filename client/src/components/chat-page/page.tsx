@@ -283,7 +283,7 @@ const ChatApp: React.FC = () => {
           <IconButton sx={{ transform: "rotate(180deg)" }}>
             <ViewSidebarOutlinedIcon />
           </IconButton>
-          <IconButton sx={{ marginLeft: "auto" }}>
+          {/* <IconButton sx={{ marginLeft: "auto" }}>
             <SearchIcon />
           </IconButton>
           <IconButton
@@ -295,8 +295,34 @@ const ChatApp: React.FC = () => {
             }}
           >
             <CreateIcon />
-          </IconButton>
+          </IconButton> */}
         </Box>
+
+        
+        {/* New chat button */}
+
+        <Button
+          onClick={() => {
+            setChatId(uuidv4());
+            setMessages((prevMessages) => {
+              return [prevMessages[0]];
+            });
+          }}
+          sx={{
+            m: 2,
+            color: "white",
+            bgcolor: theme.palette.side_panel.primary_btn,
+            border: "1px solid",
+            borderColor: theme.palette.divider,
+            borderRadius: 5,
+            transition: "background-color 0.2s",
+            "&:hover": {
+              bgcolor: theme.palette.side_panel.primary_btn_hover,
+            },
+          }}
+        >
+          + New chat
+        </Button>
 
         {/* Recent chats */}
         <Box
@@ -311,31 +337,6 @@ const ChatApp: React.FC = () => {
           </Typography>
           <RecentChats loadMessages={loadMessages} />
         </Box>
-
-        {/* New chat button */}
-
-        <Button
-          onClick={() => {
-            setChatId(uuidv4());
-            setMessages((prevMessages) => {
-              return [prevMessages[0]];
-            });
-          }}
-          sx={{
-            m: 2,
-            color: theme.palette.text.primary,
-            bgcolor: "transparent",
-            border: "1px solid",
-            borderColor: theme.palette.divider,
-            borderRadius: 5,
-            transition: "background-color 0.2s",
-            "&:hover": {
-              bgcolor: theme.palette.side_panel.hover,
-            },
-          }}
-        >
-          + New chat
-        </Button>
 
         {/* <ChatHistory
           auth_token={authToken}
@@ -416,6 +417,7 @@ const ChatApp: React.FC = () => {
           <Box
             flex={1}
             sx={{
+              padding: "2rem 16rem",
               overflowY: "auto",
               "&::-webkit-scrollbar": { display: "none" },
               msOverflowStyle: "none", // IE and Edge
