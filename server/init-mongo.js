@@ -12,7 +12,7 @@ const createUser = (async () => {
             tlsAllowInvalidCertificates: true,
             tlsAllowInvalidHostnames: true
         });
-        const db = data.db('airestacks')
+        const db = data.db(process.env.DB_NAME)
 
         console.log("Connected ",db);
 

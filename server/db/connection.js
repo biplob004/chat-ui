@@ -11,7 +11,7 @@ const connectDB = async (done) => {
             tlsAllowInvalidCertificates: true,
             tlsAllowInvalidHostnames: true
         });
-        db = data.db('chatGPT')
+        db = data.db(process.env.DB_NAME)
         done()
     } catch (err) {
         console.error("Failed connecting to DB", err);  // <-- ADD THIS
