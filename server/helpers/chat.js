@@ -3,7 +3,8 @@ import collections from "../db/collections.js";
 import { ObjectId } from "mongodb";
 import axios from "axios";
 
-const beckyUrl = "http://44.223.52.172:8000/api";
+const beckyUrl = "http://18.234.146.125:8000/api";
+//18.234.146.125
 
 export default {
     newResponse: (prompt, openai , userId) => {

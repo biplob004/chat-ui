@@ -12,7 +12,7 @@ const createUser = (async () => {
             tlsAllowInvalidCertificates: true,
             tlsAllowInvalidHostnames: true
         });
-        const db = data.db('chatGPT')
+        const db = data.db('airestacks')
 
         console.log("Connected ",db);
 

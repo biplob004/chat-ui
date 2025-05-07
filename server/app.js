@@ -13,7 +13,7 @@ dotnet.config();
 let app = express();
 let port = process.env.PORT;
 
-const allowedOrigins = ["http://localhost:8080", "http://54.87.4.36:8080"];
+const allowedOrigins = ["http://localhost:8080", "http://localhost:5001"];
 
 app.use(
   cors({
@@ -36,6 +36,7 @@ app.use(express.json({ limit: "50mb" }));
 // api route
 app.use("/api/chat/", ChatRoute);
 app.use("/api/user/", UserRoute);
+app.use("/api/health/", (req, res) => res.status(200).json({msg: "api is running"}));
 
 // front end react route
 /*app.get('/*',(req,res)=>{

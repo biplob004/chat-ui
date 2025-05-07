@@ -57,7 +57,7 @@ const CheckUser = async (req, res, next) => {
 router.post('/', CheckUser, upload.none(), async (req, res) => {
     const { message , chatId , auth_token  } = req.body;
     console.log("post chat req ", req.body);
-    const chatUrl = 'http://44.223.52.172:8000/api/chatbot';
+    const chatUrl = 'http://18.234.146.125:8000/api/chatbot';
 
     try {
         let data = new FormData();
