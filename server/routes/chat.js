@@ -57,7 +57,7 @@ const CheckUser = async (req, res, next) => {
 router.post('/', CheckUser, upload.none(), async (req, res) => {
     const { message , chatId , auth_token  } = req.body;
     console.log("post chat req ", req.body);
-    const chatUrl = 'http://18.234.146.125:8000/api/chatbot';
+    const chatUrl = process.env.BECKY_AI_API_URL
 
     try {
         let data = new FormData();

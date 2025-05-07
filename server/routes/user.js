@@ -249,7 +249,7 @@ router.get('/login', CheckLogged, async (req, res) => {
                 })
 
                 res.status(200)
-                    .cookie("userToken", token, { httpOnly: true, expires: new Date(Date.now() + 604800000) })
+                    .cookie("userToken", token, { httpOnly: true, secure: true, sameSite: 'none', expires: new Date(Date.now() + 604800000) })
                     .json({
                         status: 200,
                         message: 'Success',

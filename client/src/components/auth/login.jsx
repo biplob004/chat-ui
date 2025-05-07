@@ -57,7 +57,8 @@ const LoginComponent = () => {
         try {
             console.log(baseURL)
             res = await instance.get(`${baseURL}/api/user/login`, {
-                params: googleData || formData
+                params: googleData || formData,
+                withCredentials: true,
             })
         } catch (err) {
             console.log(err)

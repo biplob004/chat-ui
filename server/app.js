@@ -8,10 +8,18 @@ import UserRoute from "./routes/user.js";
 import path from "path";
 import { createUser } from "./init-mongo.js";
 
+import https from 'https';
+import fs from "fs";
+
 dotnet.config();
 
 let app = express();
 let port = process.env.PORT;
+
+const options = {
+  key: fs.readFileSync('private-key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+};
 
 const allowedOrigins = ["http://localhost:8080", "http://localhost:5001", "http://aire-stacks.s3-website-us-east-1.amazonaws.com"];
 
@@ -52,8 +60,8 @@ connectDB((err) => {
 
   console.log("MongoDB Connected");
 
-  app.listen(port, () => {
-    console.log("server started", port);
+  https.createServer(options, app).listen(port, () => {
+    console.log('API running on HTTPS at port ',port);
   });
 });
 

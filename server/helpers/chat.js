@@ -3,7 +3,7 @@ import collections from "../db/collections.js";
 import { ObjectId } from "mongodb";
 import axios from "axios";
 
-const beckyUrl = "http://18.234.146.125:8000/api";
+const beckyUrl = process.env.BECKY_AI_API_URL;
 //18.234.146.125
 
 export default {

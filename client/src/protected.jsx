@@ -21,7 +21,7 @@ const ProtectedRoute = ({ offline, authed }) => {
 
       try {
         console.log(baseURL)
-        res = await instance.get(`${baseURL}/api/user/checkLogged`);
+        res = await instance.get(`${baseURL}/api/user/checkLogged`, {withCredentials: true});
         if (res?.data?.data) {
           dispatch(insertUser(res?.data?.data));
         }
