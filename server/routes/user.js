@@ -471,7 +471,7 @@ router.delete('/account', async (req, res) => {
 })
 
 router.get('/logout', (req, res) => {
-    res.clearCookie('userToken').status(200).json({
+    res.clearCookie('userToken', {httpOnly: true,secure: true, sameSite: 'none'}).status(200).json({
         status: 200,
         message: 'LogOut'
     })

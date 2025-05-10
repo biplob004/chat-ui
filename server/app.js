@@ -8,33 +8,25 @@ import UserRoute from "./routes/user.js";
 import path from "path";
 import { createUser } from "./init-mongo.js";
 
-import https from 'https';
-import fs from "fs";
-
 dotnet.config();
 
 let app = express();
 let port = process.env.PORT;
 
-const options = {
-  key: fs.readFileSync('private-key.pem'),
-  cert: fs.readFileSync('cert.pem'),
-};
-
 const allowedOrigins = ["http://localhost:8080", "http://localhost:5001", "http://aire-stacks.s3-website-us-east-1.amazonaws.com"];
 
 app.use(
-  cors({
-    credentials: true,
-    origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-  })
+    cors({
+      credentials: true,
+      origin: function (origin, callback) {
+        // allow requests with no origin (like mobile apps or curl)
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+    })
 );
 
 // app.use(cors({ credentials: true, origin: process.env.SITE_URL }));
@@ -60,8 +52,8 @@ connectDB((err) => {
 
   console.log("MongoDB Connected");
 
-  https.createServer(options, app).listen(port, () => {
-    console.log('API running on HTTPS at port ',port);
+  app.listen(port, () => {
+    console.log("server started", port);
   });
 });
 
