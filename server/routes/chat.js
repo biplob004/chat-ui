@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken'
 import chat from "../helpers/chat.js";
 import FormData from 'form-data';
 import multer from 'multer';
-const upload = multer(); // default: in-memory
+const upload = multer({ storage: multer.memoryStorage() });
 
 dotnet.config()
 
@@ -54,9 +54,11 @@ const CheckUser = async (req, res, next) => {
 //     res.send("Welcome to chatGPT api v1")
 // })
 
-router.post('/', CheckUser, upload.none(), async (req, res) => {
+router.post('/', CheckUser, upload.any(), async (req, res) => {
     const { message , chatId , auth_token  } = req.body;
+    const files = req.files;
     console.log("post chat req ", req.body);
+    console.log("post chat files ", files);
     const chatUrl = process.env.BECKY_AI_API_URL
 
     try {
@@ -64,6 +66,13 @@ router.post('/', CheckUser, upload.none(), async (req, res) => {
         data.append('message', message);
         data.append('chat_id', chatId);
         data.append('auth_token', auth_token);
+
+        files.forEach(file =>
+            data.append("files", file.buffer, {
+                filename: file.originalname,
+                contentType: file.mimetype,
+            })
+        );
 
         // Proxy the request to external API
         const externalRequest = await axios.post(
