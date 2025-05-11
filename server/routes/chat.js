@@ -67,7 +67,7 @@ router.post('/', CheckUser, upload.none(), async (req, res) => {
 
         // Proxy the request to external API
         const externalRequest = await axios.post(
-            chatUrl,
+            `${chatUrl}/chatbot`,
             data,
             {
                 headers: data.getHeaders(),

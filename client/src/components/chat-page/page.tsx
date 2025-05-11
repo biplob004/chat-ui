@@ -1,5 +1,5 @@
 "use client";
-
+const baseURL = import.meta.env.VITE_API_URL;
 import React, { useState, useEffect, useRef } from "react";
 import ChatWindow from "./ChatWindow";
 import ChatInput from "./ChatInput";
@@ -92,26 +92,28 @@ const ChatApp: React.FC = () => {
       setMessages((prev) => [...prev, newMessage]);
 
       formData.append("message", message);
+
       formData.append("chatId", chatId);
       formData.append("auth_token", authToken);
 
       setLoader(true); // Show loader when sending message
-      
-      const response = await fetch("/api/chat", {
+
+      const response = await fetch(`${baseURL}/api/chat`, {
         method: "POST",
         body: formData,
         headers: {
           Accept: "text/event-stream",
         },
+        credentials: "include", // if you use cookies for auth
       });
-      
-      if (!response.body) {
-        throw new Error("Response body is null");
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
       }
-      setLoader(false);
 
       const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      const decoder = new TextDecoder("utf-8");      setLoader(false);
+
       let isDone = false;
 
       while (!isDone) {

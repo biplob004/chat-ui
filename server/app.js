@@ -13,7 +13,7 @@ dotnet.config();
 let app = express();
 let port = process.env.PORT;
 
-const allowedOrigins = ["http://localhost:8080", "http://localhost:5001", "http://aire-stacks.s3-website-us-east-1.amazonaws.com"];
+const allowedOrigins = ["http://localhost:8080", "http://localhost:5001", "https://d3shm7c63roazp.cloudfront.net"];
 
 app.use(
     cors({

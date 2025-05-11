@@ -1,4 +1,3 @@
-const baseURL = import.meta.env.VITE_API_URL;
 import React, { useEffect, useReducer, useRef } from "react";
 import { Reload, Rocket, Stop } from "../assets";
 import { Chat, New } from "../components";
@@ -141,12 +140,12 @@ const InputArea = ({ status, chatRef, stateAction }) => {
 
       try {
         if (_id) {
-          res = await instance.put(`${baseURL}/api/chat`, {
+          res = await instance.put(`/api/chat`, {
             chatId: _id,
             prompt,
           });
         } else {
-          res = await instance.post(`${baseURL}/api/chat`, {
+          res = await instance.post(`/api/chat`, {
             prompt,
           });
         }
