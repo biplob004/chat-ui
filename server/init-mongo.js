@@ -29,7 +29,15 @@ const createUser = (async () => {
                 email: 'user@example.com',  // Change this email to your test user's email
                 password: 'securepassword123',  // You can hash the password before inserting for security
             });
-            console.log("User created successfully");
+            await db.collection(collections.USER).insertOne({
+                email: 'user2@example.com',  // Change this email to your test user's email
+                password: 'securepassword123',  // You can hash the password before inserting for security
+            });
+            await db.collection(collections.USER).insertOne({
+                email: 'user3@example.com',  // Change this email to your test user's email
+                password: 'securepassword123',  // You can hash the password before inserting for security
+            });
+            console.log("Users created successfully");
         }
 
     } catch (err) {

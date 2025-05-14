@@ -45,7 +45,7 @@ const ChatApp: React.FC = () => {
   const [loader, setLoader] = React.useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [authToken, setAuthToken] = useState<string>("admin_123");
+  const [authToken, setAuthToken] = useState<string>();
   const chatWindowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

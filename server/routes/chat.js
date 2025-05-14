@@ -14,6 +14,7 @@ let router = Router()
 
 const CheckUser = async (req, res, next) => {
     jwt.verify(req.cookies?.userToken, process.env.JWT_PRIVATE_KEY, async (err, decoded) => {
+        console.log("req.cookies?.userToken ",req.cookies?.userToken)
         if (decoded) {
             let userData = null
 
@@ -48,14 +49,9 @@ const CheckUser = async (req, res, next) => {
     })
 }
 
-
-
-// router.get('/', (req, res) => {
-//     res.send("Welcome to chatGPT api v1")
-// })
-
 router.post('/', CheckUser, upload.any(), async (req, res) => {
-    const { message , chatId , auth_token  } = req.body;
+    const { message , chatId  } = req.body;
+    const { userToken } = req.cookies;
     const files = req.files;
     console.log("post chat req ", req.body);
     console.log("post chat files ", files);
@@ -65,7 +61,7 @@ router.post('/', CheckUser, upload.any(), async (req, res) => {
         let data = new FormData();
         data.append('message', message);
         data.append('chat_id', chatId);
-        data.append('auth_token', auth_token);
+        data.append('auth_token', userToken);
 
         files.forEach(file =>
             data.append("files", file.buffer, {
@@ -160,13 +156,14 @@ router.put('/', CheckUser, async (req, res) => {
     }
   });
 
-router.get('/',  async (req, res) => {
-    const { chatId, authToken } = req.query;
+router.get('/',  CheckUser, async (req, res) => {
+    const { chatId } = req.query;
+    const { userToken } = req.cookies;
 
     let response = null
 
     try {
-        response = await chat.getChat(chatId, authToken);
+        response = await chat.getChat(chatId, userToken);
     } catch (err) {
         res.status(500).json({
             status: 500,
@@ -184,13 +181,14 @@ router.get('/',  async (req, res) => {
 })
 
 router.get('/saved', CheckUser, async (req, res) => {
-    const { userId } = req.body
+    const { userToken } = req.cookies;
+
     const { chatId = null } = req.query
 
     let response = null
 
     try {
-        response = await chat.getChat(userId, chatId)
+        response = await chat.getChat(chatId, userToken)
     } catch (err) {
         if (err?.status === 404) {
             res.status(404).json({
@@ -214,19 +212,13 @@ router.get('/saved', CheckUser, async (req, res) => {
     }
 })
 
-router.get('/history',  async (req, res) => {
-    const { authToken } = req.body
+router.get('/history',  CheckUser, async (req, res) => {
+    const { userToken } = req.cookies;
 
     let response = null
 
     try {
-        response = await chat.getHistory(authToken)
-    } catch (err) {
-        res.status(500).json({
-            status: 500,
-            message: err
-        })
-    } finally {
+        response = await chat.getHistory(userToken);
         if (response) {
             res.status(200).json({
                 status: 200,
@@ -234,6 +226,11 @@ router.get('/history',  async (req, res) => {
                 data: response
             })
         }
+    } catch (err) {
+        res.status(500).json({
+            status: 500,
+            message: err
+        })
     }
 })
 

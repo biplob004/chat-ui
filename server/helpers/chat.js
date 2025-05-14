@@ -99,7 +99,7 @@ export default {
     },
     getHistory: async (authToken) => {
         const data = JSON.stringify({
-            "auth_token": "admin_123"
+            "auth_token": authToken
         });
         const config = {
             method: 'post',
