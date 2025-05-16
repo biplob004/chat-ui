@@ -176,25 +176,14 @@ export default {
             console.log("user found ? ",user);
 
             if (user) {
-                if (manual === 'true') {
+                const passwordMatched = pass === user.password;
+                if (passwordMatched) {
                     delete user.pass
                     resolve(user)
                 } else {
-                    let check
-                    try {
-                        check = await bcrypt.compare(pass, user.pass)
-                    } catch (err) {
-                        reject(err)
-                    } finally {
-                        if (check) {
-                            delete user.pass
-                            resolve(user)
-                        } else {
-                            reject({
-                                status: 422
-                            })
-                        }
-                    }
+                    reject({
+                        status: 422
+                    })
                 }
             } else {
                 reject({
