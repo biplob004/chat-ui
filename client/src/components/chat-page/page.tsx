@@ -32,14 +32,14 @@ const ChatApp: React.FC = () => {
 
   const { toggleTheme, mode } = useThemeContext();
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: Date.now().toString(),
-      content:
-        "Hello, this is Becky, your Real Estate AI Assistant. How can I help you today? I can start by creating a new deal, or you can ask me about existing deals or what needs to be done for today",
-      isSentByUser: false,
-      fileNames: [],
-      avatarUrl: "/chat-gpt-icon.png",
-    },
+    // {
+    //   id: Date.now().toString(),
+    //   content:
+    //     "Hello, this is Becky, your Real Estate AI Assistant. How can I help you today? I can start by creating a new deal, or you can ask me about existing deals or what needs to be done for today",
+    //   isSentByUser: false,
+    //   fileNames: [],
+    //   avatarUrl: "/chat-gpt-icon.png",
+    // },
   ]);
   const [chatId, setChatId] = useState<string>(uuidv4());
   const [loader, setLoader] = React.useState(false);
@@ -59,6 +59,16 @@ const ChatApp: React.FC = () => {
       });
     }
   }, [messages]);
+
+  const hasSentInitialMessage = useRef(false);
+
+  useEffect(() => {
+    // This is to triger as chat window loaded, it can use to send first welcome message by server if no old msg found in the conversation.
+    if (!hasSentInitialMessage.current && messages.length === 0) {
+      handleSendMessage("__load_chat_window__"); //'__new_chat__';
+      hasSentInitialMessage.current = true;
+    }
+  }, []);
 
   const handleSendMessage = async (message: string, files?: File[]) => {
     try {
@@ -357,9 +367,15 @@ const ChatApp: React.FC = () => {
         <Button
           onClick={() => {
             setChatId(uuidv4());
-            setMessages((prevMessages) => {
-              return [prevMessages[0]];
-            });
+
+            //// keep last msg
+            // setMessages((prevMessages) => {
+            //   return [prevMessages[0]];
+            // });
+
+            // remove all messages on new chat click
+            setMessages([]);
+            handleSendMessage("__new_chat__"); //send trigger command to server to receive welcome message from server
           }}
           sx={{
             m: 2,

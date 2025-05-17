@@ -24,25 +24,48 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       py={4}
       gap={2}
     >
-      {messages.map(
-        ({
-          id,
-          content,
-          isSentByUser,
-          fileUrls,
-          fileNames = [],
-          avatarUrl,
-        }) => (
-          <ChatMessage
-            key={id}
-            message={content}
-            isSentByUser={isSentByUser}
-            fileUrls={fileUrls}
-            fileNames={fileNames}
-            avatarUrl={avatarUrl}
-          />
-        )
-      )}
+      {/* If first msg is sent by user, then filterout that msg, its actually an automated trigger msg, that chatbot is loaded */}
+      {messages.length > 0 && messages[0].isSentByUser
+        ? messages
+            .slice(1)
+            .map(
+              ({
+                id,
+                content,
+                isSentByUser,
+                fileUrls,
+                fileNames = [],
+                avatarUrl,
+              }) => (
+                <ChatMessage
+                  key={id}
+                  message={content}
+                  isSentByUser={isSentByUser}
+                  fileUrls={fileUrls}
+                  fileNames={fileNames}
+                  avatarUrl={avatarUrl}
+                />
+              )
+            )
+        : messages.map(
+            ({
+              id,
+              content,
+              isSentByUser,
+              fileUrls,
+              fileNames = [],
+              avatarUrl,
+            }) => (
+              <ChatMessage
+                key={id}
+                message={content}
+                isSentByUser={isSentByUser}
+                fileUrls={fileUrls}
+                fileNames={fileNames}
+                avatarUrl={avatarUrl}
+              />
+            )
+          )}
 
       {/* loader */}
       {loader && (
