@@ -197,7 +197,8 @@ const ChatApp: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error("Error from server side:", error);
+      console.error("Error from server side_:", error);
+      setLoader(false);
       setMessages((prev) => [
         ...prev,
         {

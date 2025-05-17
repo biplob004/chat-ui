@@ -14,7 +14,7 @@ let router = Router()
 
 const CheckUser = async (req, res, next) => {
     jwt.verify(req.cookies?.userToken, process.env.JWT_PRIVATE_KEY, async (err, decoded) => {
-        console.log("req.cookies?.userToken ",req.cookies?.userToken)
+        // console.log("req.cookies?.userToken ", req.cookies?.userToken)
         if (decoded) {
             let userData = null
 
@@ -50,7 +50,7 @@ const CheckUser = async (req, res, next) => {
 }
 
 router.post('/', CheckUser, upload.any(), async (req, res) => {
-    const { message , chatId  } = req.body;
+    const { message, chatId } = req.body;
     const { userToken } = req.cookies;
     const files = req.files;
     console.log("post chat req ", req.body);
@@ -88,75 +88,75 @@ router.post('/', CheckUser, upload.any(), async (req, res) => {
 
 
     } catch (error) {
-      // Log the error for debugging
-      console.error('Error calling external API:', error);
-  
-      // Send error response
-      res.status(500).json({
-        status: 500,
-        message: error.message || 'An unexpected error occurred.',
-      });
+        // Log the error for debugging
+        console.error('Error calling external API:', error);
+
+        // Send error response
+        res.status(500).json({
+            status: 500,
+            message: error.message || 'An unexpected error occurred.',
+        });
     }
-  });
+});
 
 router.put('/', CheckUser, async (req, res) => {
     const { prompt, userId, chatId } = req.body;
-  
+
     let response = {};
-  
+
     try {
 
-      const apiResponse = await axios.post(
-        process.env.CLAUDE_API_URL,
-        {
-          model: 'claude-3-sonnet-20240229', // Specify the desired Claude model
-          max_tokens: 200,
-          temperature: 0.7,
-          messages: [{ role: 'user', content: prompt }],
-        },
-        {
-          headers: {
-            'x-api-key': process.env.CLAUDE_API_KEY,
-            'Content-Type': 'application/json',
-            'anthropic-version': '2023-06-01',
-          },
+        const apiResponse = await axios.post(
+            process.env.CLAUDE_API_URL,
+            {
+                model: 'claude-3-sonnet-20240229', // Specify the desired Claude model
+                max_tokens: 200,
+                temperature: 0.7,
+                messages: [{ role: 'user', content: prompt }],
+            },
+            {
+                headers: {
+                    'x-api-key': process.env.CLAUDE_API_KEY,
+                    'Content-Type': 'application/json',
+                    'anthropic-version': '2023-06-01',
+                },
+            }
+        );
+
+
+        const claudeText = apiResponse?.data?.content[0]?.text?.trim();
+
+        if (claudeText) {
+
+            response.openai = claudeText.replace(/^\n+/, '');
+
+
+            response.db = await chat.updateChat(chatId, prompt, response.openai, userId);
+
+
+            res.status(200).json({
+                status: 200,
+                message: 'Success',
+                data: {
+                    content: response.openai,
+                },
+            });
+        } else {
+            throw new Error('Claude API returned an empty response.');
         }
-      );
-  
-
-      const claudeText = apiResponse?.data?.content[0]?.text?.trim();
-  
-      if (claudeText) {
-
-        response.openai = claudeText.replace(/^\n+/, '');
-  
-
-        response.db = await chat.updateChat(chatId, prompt, response.openai, userId);
-  
-
-        res.status(200).json({
-          status: 200,
-          message: 'Success',
-          data: {
-            content: response.openai,
-          },
-        });
-      } else {
-        throw new Error('Claude API returned an empty response.');
-      }
     } catch (err) {
 
-      console.error('Error calling Claude API:', err);
-  
+        console.error('Error calling Claude API:', err);
 
-      res.status(500).json({
-        status: 500,
-        message: err.message || 'An unexpected error occurred.',
-      });
+
+        res.status(500).json({
+            status: 500,
+            message: err.message || 'An unexpected error occurred.',
+        });
     }
-  });
+});
 
-router.get('/',  CheckUser, async (req, res) => {
+router.get('/', CheckUser, async (req, res) => {
     const { chatId } = req.query;
     const { userToken } = req.cookies;
 
@@ -212,7 +212,7 @@ router.get('/saved', CheckUser, async (req, res) => {
     }
 })
 
-router.get('/history',  CheckUser, async (req, res) => {
+router.get('/history', CheckUser, async (req, res) => {
     const { userToken } = req.cookies;
 
     let response = null

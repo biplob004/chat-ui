@@ -80,6 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Type a message..."
           fullWidth
           variant="outlined"
+          autocomplete="off"
           sx={{
             width: "100%",
             "& .MuiOutlinedInput-root": {
