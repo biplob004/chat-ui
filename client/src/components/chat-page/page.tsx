@@ -119,6 +119,8 @@ const ChatApp: React.FC = () => {
 
       let isDone = false;
 
+      let stream_msgs = "";
+
       while (!isDone) {
         const { value, done } = await reader.read();
         isDone = done;
@@ -133,16 +135,51 @@ const ChatApp: React.FC = () => {
             try {
               const stream_data = JSON.parse(jsonString);
 
+              if (stream_data.status == "msg_stream") {
+                // here handle the streaming message
+
+                if (stream_msgs == "") {
+                  // First add then below append only
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: uuidv4(),
+                      content: stream_msgs,
+                      isSentByUser: false,
+                      fileNames: files?.map((f) => f.name) || [], // Update to array
+                      avatarUrl: "/chat-gpt-icon.png",
+                    },
+                  ]);
+                }
+
+                stream_msgs += stream_data.msg;
+
+                setMessages((prev) => {
+                  const updatedMessages = [...prev];
+                  const lastMessage =
+                    updatedMessages[updatedMessages.length - 1];
+                  lastMessage.content = stream_msgs;
+                  return updatedMessages;
+                });
+
+                return;
+              } else {
+                //reset the variable if not stream_msg
+                stream_msgs = "";
+              }
+
               console.log(stream_data);
 
               if (
-                stream_data.node_name == "end_node" ||
-                stream_data.node_name == "__interrupt__"
+                stream_data.status === "node_stream" &&
+                (stream_data.node_name == "end_node" ||
+                  stream_data.node_name == "__interrupt__")
               ) {
                 setLoader(false);
                 if (stream_data.chat_title) {
                   setChatTitle(stream_data.chat_title);
                 }
+                return;
               }
 
               if (
@@ -213,6 +250,7 @@ const ChatApp: React.FC = () => {
   };
 
   const loadMessages = async (chatId: string) => {
+    //Load messages when user click on history list item;
     try {
       const response = await axios.get("api/chat/", {
         params: {
