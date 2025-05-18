@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import instance from "../../config/instance";
 import { useDispatch, useSelector } from "react-redux";
 import { emptyUser } from "../../redux/user";
+import BugReportButton from "./BugReportButton";
 
 const ChatApp: React.FC = () => {
   const theme = useTheme();
@@ -438,6 +439,13 @@ const ChatApp: React.FC = () => {
             </>
           )}{" "}
         </Button>
+
+        <BugReportButton
+          theme={theme}
+          chat_id={chatId}
+          chat_messages={messages}
+          apiEndpoint={`${baseURL}/api/bug-report`}
+        />
       </Box>
       {/* Messages */}
       <Box
