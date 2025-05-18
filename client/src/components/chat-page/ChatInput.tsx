@@ -39,7 +39,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey && !isLoading) {
       event.preventDefault();
       handleSend();
     }
@@ -80,7 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Type a message..."
           fullWidth
           variant="outlined"
-          autocomplete="off"
+          autoComplete="off"
           sx={{
             width: "100%",
             "& .MuiOutlinedInput-root": {

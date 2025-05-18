@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import instance from "../../config/instance";
 import { useDispatch, useSelector } from "react-redux";
 import { emptyUser } from "../../redux/user";
+import BugReportButton from "./BugReportButton";
 
 const ChatApp: React.FC = () => {
   const theme = useTheme();
@@ -32,14 +33,14 @@ const ChatApp: React.FC = () => {
 
   const { toggleTheme, mode } = useThemeContext();
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: Date.now().toString(),
-      content:
-        "Hello, this is Becky, your Real Estate AI Assistant. How can I help you today? I can start by creating a new deal, or you can ask me about existing deals or what needs to be done for today",
-      isSentByUser: false,
-      fileNames: [],
-      avatarUrl: "/chat-gpt-icon.png",
-    },
+    // {
+    //   id: Date.now().toString(),
+    //   content:
+    //     "Hello, this is Becky, your Real Estate AI Assistant. How can I help you today? I can start by creating a new deal, or you can ask me about existing deals or what needs to be done for today",
+    //   isSentByUser: false,
+    //   fileNames: [],
+    //   avatarUrl: "/chat-gpt-icon.png",
+    // },
   ]);
   const [chatId, setChatId] = useState<string>(uuidv4());
   const [loader, setLoader] = React.useState(false);
@@ -59,6 +60,16 @@ const ChatApp: React.FC = () => {
       });
     }
   }, [messages]);
+
+  const hasSentInitialMessage = useRef(false);
+
+  useEffect(() => {
+    // This is to triger as chat window loaded, it can use to send first welcome message by server if no old msg found in the conversation.
+    if (!hasSentInitialMessage.current && messages.length === 0) {
+      handleSendMessage("__load_chat_window__"); //'__new_chat__';
+      hasSentInitialMessage.current = true;
+    }
+  }, []);
 
   const handleSendMessage = async (message: string, files?: File[]) => {
     try {
@@ -119,6 +130,8 @@ const ChatApp: React.FC = () => {
 
       let isDone = false;
 
+      let stream_msgs = "";
+
       while (!isDone) {
         const { value, done } = await reader.read();
         isDone = done;
@@ -133,16 +146,51 @@ const ChatApp: React.FC = () => {
             try {
               const stream_data = JSON.parse(jsonString);
 
+              if (stream_data.status == "msg_stream") {
+                // here handle the streaming message
+
+                if (stream_msgs == "") {
+                  // First add then below append only
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: uuidv4(),
+                      content: stream_msgs,
+                      isSentByUser: false,
+                      fileNames: files?.map((f) => f.name) || [], // Update to array
+                      avatarUrl: "/chat-gpt-icon.png",
+                    },
+                  ]);
+                }
+
+                stream_msgs += stream_data.msg;
+
+                setMessages((prev) => {
+                  const updatedMessages = [...prev];
+                  const lastMessage =
+                    updatedMessages[updatedMessages.length - 1];
+                  lastMessage.content = stream_msgs;
+                  return updatedMessages;
+                });
+
+                return;
+              } else {
+                //reset the variable if not stream_msg
+                stream_msgs = "";
+              }
+
               console.log(stream_data);
 
               if (
-                stream_data.node_name == "end_node" ||
-                stream_data.node_name == "__interrupt__"
+                stream_data.status === "node_stream" &&
+                (stream_data.node_name == "end_node" ||
+                  stream_data.node_name == "__interrupt__")
               ) {
                 setLoader(false);
                 if (stream_data.chat_title) {
                   setChatTitle(stream_data.chat_title);
                 }
+                return;
               }
 
               if (
@@ -213,6 +261,7 @@ const ChatApp: React.FC = () => {
   };
 
   const loadMessages = async (chatId: string) => {
+    //Load messages when user click on history list item;
     try {
       const response = await axios.get("api/chat/", {
         params: {
@@ -319,9 +368,15 @@ const ChatApp: React.FC = () => {
         <Button
           onClick={() => {
             setChatId(uuidv4());
-            setMessages((prevMessages) => {
-              return [prevMessages[0]];
-            });
+
+            //// keep last msg
+            // setMessages((prevMessages) => {
+            //   return [prevMessages[0]];
+            // });
+
+            // remove all messages on new chat click
+            setMessages([]);
+            handleSendMessage("__new_chat__"); //send trigger command to server to receive welcome message from server
           }}
           sx={{
             m: 2,
@@ -384,6 +439,13 @@ const ChatApp: React.FC = () => {
             </>
           )}{" "}
         </Button>
+
+        <BugReportButton
+          theme={theme}
+          chat_id={chatId}
+          chat_messages={messages}
+          apiEndpoint={`${baseURL}/api/bug-report`}
+        />
       </Box>
       {/* Messages */}
       <Box
