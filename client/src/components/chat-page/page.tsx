@@ -25,6 +25,30 @@ import instance from "../../config/instance";
 import { useDispatch, useSelector } from "react-redux";
 import { emptyUser } from "../../redux/user";
 import BugReportButton from "./BugReportButton";
+import UserPermissionForm from "./UserPermissionForm";
+
+const initialFormData = [
+  {
+    role: "owner",
+    email: "owner@email.com",
+    permission: ["agent", "buyer", "admin", "seller", "guest"],
+  },
+  {
+    role: "buyer",
+    email: "buyer@email.com",
+    permission: ["agent", "buyer", "admin", "seller", "guest"],
+  },
+  {
+    role: "seller",
+    email: "seller@email.com",
+    permission: ["agent", "buyer", "admin", "seller", "guest"],
+  },
+  {
+    role: "guest",
+    email: "guest@email.com",
+    permission: ["agent", "buyer", "admin", "seller", "guest"],
+  },
+];
 
 const ChatApp: React.FC = () => {
   const theme = useTheme();
@@ -44,6 +68,7 @@ const ChatApp: React.FC = () => {
   ]);
   const [chatId, setChatId] = useState<string>(uuidv4());
   const [loader, setLoader] = React.useState(false);
+  const [permissionFormOpen, setPermissionFormOpen] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string>();
@@ -72,6 +97,7 @@ const ChatApp: React.FC = () => {
   }, []);
 
   const handleSendMessage = async (message: string, files?: File[]) => {
+    // setPermissionFormOpen(true);
     try {
       const formData = new FormData();
       const fileNames: string[] = [];
@@ -336,6 +362,15 @@ const ChatApp: React.FC = () => {
 
   return (
     <div className="flex h-screen">
+      {/* Custom dialog form for data input */}
+      <UserPermissionForm
+        initialData={initialFormData}
+        handleSendMessage={handleSendMessage}
+        open={permissionFormOpen}
+        onClose={() => setPermissionFormOpen(false)}
+        theme={theme}
+      />
+
       {/* Sidebar */}
       <Box
         className="side-menu flex flex-col"

@@ -9,15 +9,15 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Theme,
   SxProps,
+  useTheme,
 } from "@mui/material";
+import { useThemeContext } from "./ThemeContext"; // Import your theme context
 
 interface BugReportButtonProps {
-  theme: Theme;
   buttonSx?: SxProps;
   chat_id: string;
-  chat_messages: any;
+  chat_messages: any[];
   apiEndpoint?: string;
 }
 
@@ -34,17 +34,19 @@ interface BugReportData {
     timestamp: string;
     url: string;
     screenSize: string;
+    theme_mode: string;
     [key: string]: any; // Allow for additional metadata
   };
 }
 
 const BugReportButton: React.FC<BugReportButtonProps> = ({
-  theme,
   buttonSx = {},
   chat_id,
   chat_messages = [],
   apiEndpoint = "DEFAULT_API_ENDPOINT",
 }) => {
+  const theme = useTheme();
+  const { mode } = useThemeContext(); // Get theme mode from your context
   const [open, setOpen] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -85,6 +87,7 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
         screenSize: `${window.innerWidth}x${window.innerHeight}`,
         chat_messages: chat_messages,
         chat_id: chat_id,
+        theme_mode: mode, // Include the current theme mode
       },
     };
 
@@ -140,9 +143,10 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
           border: "1px solid",
           borderColor: theme.palette.divider,
           borderRadius: 5,
-          transition: "background-color 0.2s",
+          transition: "background-color 0.2s, transform 0.1s",
           "&:hover": {
             bgcolor: theme.palette.side_panel.primary_btn_hover,
+            transform: "scale(1.02)",
           },
           ...buttonSx,
         }}
@@ -150,8 +154,20 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
         Report Bug
       </Button>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Report a Bug</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Report a Bug</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -165,10 +181,26 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
             variant="outlined"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            sx={{
+              mt: 1,
+              "& .MuiOutlinedInput-root": {
+                bgcolor: theme.palette.chat_input.text_box,
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: theme.palette.primary.main,
+                },
+              },
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleClose}
+            color="primary"
+            sx={{
+              borderRadius: 2,
+              px: 2,
+            }}
+          >
             Cancel
           </Button>
           <Button
@@ -176,6 +208,14 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
             color="primary"
             variant="contained"
             disabled={loading}
+            sx={{
+              bgcolor: theme.palette.side_panel.primary_btn,
+              "&:hover": {
+                bgcolor: theme.palette.side_panel.primary_btn_hover,
+              },
+              borderRadius: 2,
+              px: 3,
+            }}
           >
             {loading ? <CircularProgress size={24} /> : "Submit"}
           </Button>
@@ -191,7 +231,10 @@ const BugReportButton: React.FC<BugReportButtonProps> = ({
         <Alert
           onClose={handleNotificationClose}
           severity={notification.type}
-          sx={{ width: "100%" }}
+          sx={{
+            width: "100%",
+            borderRadius: 2,
+          }}
         >
           {notification.message}
         </Alert>
