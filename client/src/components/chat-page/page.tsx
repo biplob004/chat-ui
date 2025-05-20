@@ -26,6 +26,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { emptyUser } from "../../redux/user";
 import BugReportButton from "./BugReportButton";
 import UserPermissionForm from "./UserPermissionForm";
+import RPADocumentEditForm from "./RPADocumentEditForm";
+import SCODocumentEditForm from "./SCODocumentEditForm";
 
 const initialFormData = [
   {
@@ -69,6 +71,8 @@ const ChatApp: React.FC = () => {
   const [chatId, setChatId] = useState<string>(uuidv4());
   const [loader, setLoader] = React.useState(false);
   const [permissionFormOpen, setPermissionFormOpen] = useState(false);
+  const [rpaFormOpen, setRPAFormOpen] = useState(false);
+  const [scoFormOpen, setSCOFormOpen] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string>();
@@ -76,6 +80,8 @@ const ChatApp: React.FC = () => {
 
   const { user } = useSelector((state) => state);
   const [chatTitle, setChatTitle] = useState<string>("");
+  const [rpaFormData, setRpaFormData] = useState();
+  const [scoFormData, setScoFormData] = useState();
 
   useEffect(() => {
     if (chatWindowRef.current) {
@@ -96,8 +102,12 @@ const ChatApp: React.FC = () => {
     }
   }, []);
 
-  const handleSendMessage = async (message: string, files?: File[]) => {
-    // setPermissionFormOpen(true);
+  const handleSendMessage = async (
+    message: string,
+    files?: File[],
+    sentByUser = true,
+    raw_data = ""
+  ) => {
     try {
       const formData = new FormData();
       const fileNames: string[] = [];
@@ -121,18 +131,20 @@ const ChatApp: React.FC = () => {
           ? "\nUploaded filename: " + fileNames.join("\n")
           : "");
 
+      console.log(message);
+
+      // This message: is sent by user when click on sent button
       const newMessage: Message = {
-        id: Date.now().toString(),
-        content: message, // todo: Here you can remove @string for command text
-        isSentByUser: true,
+        id: uuidv4(),
+        content: message, // send json msg to server instead of md if that available, from form outputs
+        isSentByUser: sentByUser, //default true
         fileUrls: files?.map((file) => URL.createObjectURL(file)),
         fileNames: files?.map((file) => file.name) || [],
       };
 
       setMessages((prev) => [...prev, newMessage]);
 
-      formData.append("message", message);
-
+      formData.append("message", raw_data != "" ? raw_data : message);
       formData.append("chatId", chatId);
       formData.append("auth_token", authToken);
 
@@ -253,34 +265,54 @@ const ChatApp: React.FC = () => {
                 });
               } else if (stream_data.type === "add" && stream_data.msg != "") {
                 let message_ = stream_data.msg;
-                // Check if the message is a special message starting with '@@@'
-                if (stream_data.msg.startsWith("@@@")) {
-                  const jsonString = stream_data.msg.slice(3); // Removing the '@@@' prefix
-                  try {
-                    const specialData = JSON.parse(jsonString);
-                    if (specialData["template"] == "html_dashboard") {
-                      message_ = generateDashboardMessage(
-                        specialData["data"],
-                        theme.palette.mode
-                      );
-                    } else if (specialData["template"] == "status_bar") {
-                      message_ = generateStatusTable(specialData["data"]);
-                    }
-                  } catch (error) {
-                    console.error("Error parsing special JSON:", error);
-                  }
-                }
+                // Check if the message is a special message containing '@@@'
 
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    id: uuidv4(),
-                    content: message_,
-                    isSentByUser: false,
-                    fileNames: files?.map((f) => f.name) || [], // Update to array
-                    avatarUrl: "/chat-gpt-icon.png",
-                  },
-                ]);
+                if (stream_data.msg.startsWith("@@@")) {
+                  // Try to extract template type and JSON data
+                  const match = stream_data.msg.match(/@@@(\w+)@@@(.*)/);
+
+                  if (match) {
+                    const templateType = match[1]; // This captures the word between the first and second @@@
+                    const jsonString = match[2]; // This captures everything after the second @@@
+
+                    try {
+                      const specialData = JSON.parse(jsonString);
+
+                      if (templateType === "RPA") {
+                        setRpaFormData(specialData);
+                        setRPAFormOpen(true);
+                      } else if (templateType === "SCO") {
+                        setScoFormData(specialData);
+                        setSCOFormOpen(true);
+                      } else if (templateType === "html_dashboard") {
+                        message_ = generateDashboardMessage(
+                          specialData,
+                          theme.palette.mode
+                        );
+                      } else if (templateType === "status_bar") {
+                        message_ = generateStatusTable(specialData);
+                      }
+                      // You can add more template types as needed
+                    } catch (error) {
+                      console.error(
+                        `Error parsing ${templateType} JSON:`,
+                        error
+                      );
+                    }
+                  }
+                } else {
+                  // Not to show anything if it starts with @@@ (for form data)
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: uuidv4(),
+                      content: message_,
+                      isSentByUser: false,
+                      fileNames: files?.map((f) => f.name) || [], // Update to array
+                      avatarUrl: "/chat-gpt-icon.png",
+                    },
+                  ]);
+                }
               }
             } catch (error) {
               console.error("Failed to parse JSON string:", jsonString, error);
@@ -294,7 +326,7 @@ const ChatApp: React.FC = () => {
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: uuidv4(),
           content: "Error: Could not get a response from the server.",
           isSentByUser: false,
           fileNames: files?.map((f) => f.name) || [], // Update to array
@@ -386,8 +418,30 @@ const ChatApp: React.FC = () => {
         handleSendMessage={handleSendMessage}
         open={permissionFormOpen}
         onClose={() => setPermissionFormOpen(false)}
-        theme={theme}
+        // theme={theme}
       />
+
+      {rpaFormData && (
+        <RPADocumentEditForm
+          initialData={rpaFormData}
+          open={rpaFormOpen}
+          onClose={() => setRPAFormOpen(false)}
+          onSubmit={(message, raw_data) =>
+            handleSendMessage(message, undefined, false, raw_data)
+          }
+        />
+      )}
+
+      {scoFormData && (
+        <SCODocumentEditForm
+          initialData={scoFormData}
+          open={scoFormOpen}
+          onClose={() => setSCOFormOpen(false)}
+          onSubmit={(message, raw_data) =>
+            handleSendMessage(message, undefined, false, raw_data)
+          }
+        />
+      )}
 
       {/* Sidebar */}
       <Box
@@ -494,7 +548,6 @@ const ChatApp: React.FC = () => {
         </Button>
 
         <BugReportButton
-          theme={theme}
           chat_id={chatId}
           chat_messages={messages}
           apiEndpoint={`${baseURL}/api/bug-report`}
