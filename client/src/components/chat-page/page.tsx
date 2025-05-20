@@ -207,15 +207,32 @@ const ChatApp: React.FC = () => {
 
               console.log(stream_data);
 
+              // For end node return/finish
               if (
                 stream_data.status === "node_stream" &&
-                (stream_data.node_name == "end_node" ||
-                  stream_data.node_name == "__interrupt__")
+                stream_data.node_name == "end_node"
               ) {
                 setLoader(false);
                 if (stream_data.chat_title) {
                   setChatTitle(stream_data.chat_title);
                 }
+                return;
+              }
+
+              //For interrupted msg return/finish here
+              if (stream_data.status === "interrupted_msg") {
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: uuidv4(),
+                    content: stream_data.msg,
+                    isSentByUser: false,
+                    fileNames: files?.map((f) => f.name) || [], // Update to array
+                    avatarUrl: "/chat-gpt-icon.png",
+                  },
+                ]);
+
+                setLoader(false);
                 return;
               }
 
@@ -226,6 +243,7 @@ const ChatApp: React.FC = () => {
                 stream_data.type === "update" &&
                 stream_data.msg != ""
               ) {
+                // For overriting prev msg
                 setMessages((prev) => {
                   const updatedMessages = [...prev];
                   const lastMessage =
