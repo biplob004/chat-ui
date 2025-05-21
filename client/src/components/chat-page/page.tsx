@@ -28,6 +28,7 @@ import BugReportButton from "./BugReportButton";
 import UserPermissionForm from "./UserPermissionForm";
 import RPADocumentEditForm from "./RPADocumentEditForm";
 import SCODocumentEditForm from "./SCODocumentEditForm";
+import TimelineEditForm from "./TimelineEditForm";
 
 const initialFormData = [
   {
@@ -73,6 +74,8 @@ const ChatApp: React.FC = () => {
   const [permissionFormOpen, setPermissionFormOpen] = useState(false);
   const [rpaFormOpen, setRPAFormOpen] = useState(false);
   const [scoFormOpen, setSCOFormOpen] = useState(false);
+  const [timelineFormOpen, setTimelineFormOpen] = useState(false);
+  const [timelineFormData, setTimelineFormData] = useState();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string>();
@@ -284,6 +287,9 @@ const ChatApp: React.FC = () => {
                       } else if (templateType === "SCO") {
                         setScoFormData(specialData);
                         setSCOFormOpen(true);
+                      } else if (templateType === "TIMELINE") {
+                        setTimelineFormData(specialData);
+                        setTimelineFormOpen(true);
                       } else if (templateType === "html_dashboard") {
                         message_ = generateDashboardMessage(
                           specialData,
@@ -437,6 +443,17 @@ const ChatApp: React.FC = () => {
           initialData={scoFormData}
           open={scoFormOpen}
           onClose={() => setSCOFormOpen(false)}
+          onSubmit={(message, raw_data) =>
+            handleSendMessage(message, undefined, false, raw_data)
+          }
+        />
+      )}
+
+      {timelineFormData && (
+        <TimelineEditForm
+          initialData={timelineFormData}
+          open={timelineFormOpen}
+          onClose={() => setTimelineFormOpen(false)}
           onSubmit={(message, raw_data) =>
             handleSendMessage(message, undefined, false, raw_data)
           }
