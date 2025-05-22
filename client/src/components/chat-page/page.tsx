@@ -26,9 +26,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { emptyUser } from "../../redux/user";
 import BugReportButton from "./BugReportButton";
 import UserPermissionForm from "./UserPermissionForm";
+
 import RPADocumentEditForm from "./RPADocumentEditForm";
 import SCODocumentEditForm from "./SCODocumentEditForm";
 import TimelineEditForm from "./TimelineEditForm";
+
 
 const initialFormData = [
   {
@@ -71,11 +73,12 @@ const ChatApp: React.FC = () => {
   ]);
   const [chatId, setChatId] = useState<string>(uuidv4());
   const [loader, setLoader] = React.useState(false);
-  const [permissionFormOpen, setPermissionFormOpen] = useState(false);
+
   const [rpaFormOpen, setRPAFormOpen] = useState(false);
   const [scoFormOpen, setSCOFormOpen] = useState(false);
   const [timelineFormOpen, setTimelineFormOpen] = useState(false);
   const [timelineFormData, setTimelineFormData] = useState();
+
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [authToken, setAuthToken] = useState<string>();
@@ -111,6 +114,7 @@ const ChatApp: React.FC = () => {
     sentByUser = true,
     raw_data = ""
   ) => {
+
     try {
       const formData = new FormData();
       const fileNames: string[] = [];
@@ -459,6 +463,7 @@ const ChatApp: React.FC = () => {
           }
         />
       )}
+
 
       {/* Sidebar */}
       <Box
