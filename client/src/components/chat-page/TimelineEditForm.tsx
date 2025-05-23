@@ -64,27 +64,19 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
   useEffect(() => {
     if (initialData) {
       const processedTimelineData =
-        initialData.timeline_data_dict_list?.map((item) => {
-          return {
-            "Process Step": item["Process Step"],
-            Owner: item["Owner"],
-            Comment: item["Comment"] || "",
-            "Due Date":
-              typeof item["Due Date"] === "string"
+        initialData.timeline_data_dict_list?.map((item) => ({
+          ...item, // Keep all existing properties
+          "Due Date":
+            typeof item["Due Date"] === "string"
+              ? item["Due Date"]
+              : item["Due Date"] instanceof Date
                 ? item["Due Date"]
-                : item["Due Date"] instanceof Date
-                  ? item["Due Date"]
-                  : new Date(item["Due Date"]),
-            Status: item["Status"],
-            list_index: item.list_index,
-          };
-        }) || [];
+                : new Date(item["Due Date"]),
+        })) || [];
 
       setFormData({
-        deal_id: initialData.deal_id || "",
+        ...initialData, // Keep all existing form data
         timeline_data_dict_list: processedTimelineData,
-        address_from_rpa_doc: initialData.address_from_rpa_doc || "",
-        rpa_version: initialData.rpa_version || "",
       });
     } else {
       setFormData({
@@ -110,6 +102,14 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
   const handleStatusChange = (index: number, status: string) => {
     const newTimelineData = [...formData.timeline_data_dict_list];
     newTimelineData[index]["Status"] = status;
+
+    // automatic add todays date, use pacific timezone if status Completed
+    if (status === "Completed") {
+      newTimelineData[index]["Actual Close Date"] = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
+      );
+    }
+
     setFormData({
       ...formData,
       timeline_data_dict_list: newTimelineData,
@@ -128,8 +128,9 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
   const generateMarkdownTable = (data: TimelineItem[]) => {
     let markdown = "# Project Timeline\n\n";
 
-    markdown += "| Process Step | Owner | Comment | Due Date | Status |\n";
-    markdown += "| --- | --- | --- | --- | --- |\n";
+    markdown +=
+      "| Process Step | Owner | Due Date | Actual Close Date | Comment | Status |\n";
+    markdown += "| --- | --- | --- | --- | --- | --- |\n";
 
     data.forEach((item) => {
       const dueDate =
@@ -137,11 +138,19 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
           ? item["Due Date"]
           : format(item["Due Date"] as Date, "yyyy-MM-dd");
 
+      const CompletionDate =
+        typeof item["Actual Close Date"] === "string"
+          ? item["Actual Close Date"]
+          : format(item["Actual Close Date"] as Date, "yyyy-MM-dd");
+
       const comment = item["Comment"] || "";
-      // Replace newlines with <br> for markdown display
+      // Keep line breaks for comment column
       const formattedComment = comment.replace(/\n/g, "<br>");
 
-      markdown += `| ${item["Process Step"]} | ${item["Owner"]} | ${formattedComment} | ${dueDate} | ${item["Status"]} |\n`;
+      // Escape pipe characters in content to prevent table breaking
+      const escapePipes = (text: string) => text.replace(/\|/g, "\\|");
+
+      markdown += `| ${escapePipes(item["Process Step"])} | ${escapePipes(item["Owner"])} | ${dueDate} | ${CompletionDate} | ${escapePipes(formattedComment)} | ${escapePipes(item["Status"])} |\n`;
     });
 
     return markdown;
@@ -176,7 +185,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     return null;
   };
 
-  const statusOptions = ["pending", "in progress", "completed", "delayed"];
+  const statusOptions = ["Pending", "Completed"];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -257,6 +266,21 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                       </Typography>
                     </Grid>
 
+                    {/* Due Date - Editable */}
+                    <Grid item xs={12} md={2.4}>
+                      <DatePicker
+                        label="Due Date"
+                        value={parseDate(item["Due Date"])}
+                        onChange={(date) => handleDateChange(index, date)}
+                        sx={{
+                          width: "100%",
+                          "& .MuiOutlinedInput-root": {
+                            backgroundColor: theme.palette.chat_input.text_box,
+                          },
+                        }}
+                      />
+                    </Grid>
+
                     {/* Comment - Editable */}
                     <Grid item xs={12} md={2.4}>
                       <TextField
@@ -274,21 +298,6 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                           },
                         }}
                         placeholder="Add your comments here..."
-                      />
-                    </Grid>
-
-                    {/* Due Date - Editable */}
-                    <Grid item xs={12} md={2.4}>
-                      <DatePicker
-                        label="Due Date"
-                        value={parseDate(item["Due Date"])}
-                        onChange={(date) => handleDateChange(index, date)}
-                        sx={{
-                          width: "100%",
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: theme.palette.chat_input.text_box,
-                          },
-                        }}
                       />
                     </Grid>
 

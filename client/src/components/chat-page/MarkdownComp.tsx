@@ -213,24 +213,65 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       // Default text color
       let textColor = theme.palette.text.primary;
       let displayText = children;
+      let shouldWrapText = true; // Default to wrap text
+
+      // Define regex patterns that should NOT wrap text
+      const noWrapPatterns = [
+        // Character count check - don't wrap if less than 100 characters
+        /^.{1,40}$/s, // Any text with 100 characters or less (including newlines)
+
+        // Add more regex patterns here as needed
+        /^\d+$/, // Example: pure numbers
+        /^[A-Z]{2,4}$/, // Example: uppercase abbreviations
+        /^\w+@\w+\.\w+$/, // Example: email addresses
+
+        // Phone numbers
+        /^\+?\d{1,4}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
+        /^\(\d{3}\)\s?\d{3}-\d{4}$/,
+
+        // Date formats
+        /^\d{1,2}\/\d{1,2}\/\d{2,4}$/,
+        /^\d{4}-\d{2}-\d{2}$/,
+        /^\d{2}-\d{2}-\d{4}$/,
+
+        // Time formats
+        /^\d{1,2}:\d{2}(:\d{2})?\s?(AM|PM|am|pm)?$/,
+
+        // Currency and financial
+        /^\$\d+(\.\d{2})?$/,
+        /^\d+\.\d{2}$/,
+
+        // Version numbers
+        /^v?\d+\.\d+(\.\d+)?$/,
+      ];
 
       if (typeof children === "string") {
-        if (displayText == "_complete") {
+        // Check if text matches any no-wrap patterns
+        shouldWrapText = !noWrapPatterns.some((pattern) =>
+          pattern.test(children)
+        );
+
+        // Handle status colors
+        if (displayText === "_complete") {
           textColor = "green";
-        } else if (displayText == "_pending") {
+        } else if (displayText === "_pending") {
           textColor = "orange";
-        } else if (displayText == "_canceled") {
+        } else if (displayText === "_canceled") {
           textColor = "red";
         }
 
         displayText = children.replace(/^_/, "");
       }
+
       return (
         <td
-          className="px-4 py-2 text-center first:text-left first:whitespace-nowrap"
+          className={`px-4 py-2 text-center first:text-left ${
+            shouldWrapText ? "" : "first:whitespace-nowrap whitespace-nowrap"
+          }`}
           style={{
             border: `1px solid ${theme.palette.divider}`,
             color: textColor,
+            whiteSpace: shouldWrapText ? "normal" : "nowrap",
           }}
           {...props}
         >
