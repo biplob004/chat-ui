@@ -311,8 +311,6 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                         {isEditable ? (
                           <TextField
                             label="Comment"
-                            multiline
-                            rows={2}
                             value={item["Comment"] || ""}
                             onChange={(e) =>
                               handleCommentChange(index, e.target.value)
@@ -322,6 +320,16 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                               "& .MuiOutlinedInput-root": {
                                 backgroundColor:
                                   theme.palette.chat_input.text_box,
+                              },
+                              "& .MuiOutlinedInput-input": {
+                                overflowX: "auto",
+                                overflowY: "hidden",
+                                whiteSpace: "nowrap",
+                                scrollbarWidth: "none", // Firefox
+                                "&::-webkit-scrollbar": {
+                                  display: "none", // Chrome, Safari, Edge
+                                },
+                                "-ms-overflow-style": "none", // Internet Explorer
                               },
                             }}
                             placeholder="Add your comments here..."

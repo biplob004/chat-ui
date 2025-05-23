@@ -81,7 +81,7 @@ const ChatApp: React.FC = () => {
   const [authToken, setAuthToken] = useState<string>();
   const chatWindowRef = useRef<HTMLDivElement>(null);
 
-  const { user } = useSelector((state) => state);
+  const { user } = useSelector((state: any) => state);
   const [chatTitle, setChatTitle] = useState<string>("");
   const [rpaFormData, setRpaFormData] = useState();
   const [scoFormData, setScoFormData] = useState();
@@ -149,7 +149,7 @@ const ChatApp: React.FC = () => {
 
       formData.append("message", raw_data != "" ? raw_data : message);
       formData.append("chatId", chatId);
-      formData.append("auth_token", authToken);
+      formData.append("auth_token", authToken ?? "");
 
       setLoader(true); // Show loader when sending message
 
@@ -166,6 +166,9 @@ const ChatApp: React.FC = () => {
         throw new Error("Network response was not ok");
       }
 
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
 
@@ -345,11 +348,12 @@ const ChatApp: React.FC = () => {
   const loadMessages = async (chatId: string) => {
     //Load messages when user click on history list item;
     try {
-      const response = await axios.get("api/chat/", {
+      const response = await axios.get(`${baseURL}/api/chat/`, {
         params: {
           chatId: chatId,
           authToken: authToken,
         },
+        withCredentials: true,
       });
 
       const messages_data = response.data.data;
@@ -404,7 +408,7 @@ const ChatApp: React.FC = () => {
     if (window.confirm("Do you want log out")) {
       let res: { data?: { status?: number } } | null = null;
       try {
-        res = await instance.get(`/api/user/logout`);
+        res = await instance.get(`${baseURL}/api/user/logout`);
       } catch (err) {
         alert(err);
       } finally {
@@ -500,6 +504,7 @@ const ChatApp: React.FC = () => {
 
             // remove all messages on new chat click
             setMessages([]);
+            // info: on click of new chat it will immediately send message to server, so it will create new chat id ;
             handleSendMessage("__new_chat__"); //send trigger command to server to receive welcome message from server
           }}
           sx={{

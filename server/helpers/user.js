@@ -176,20 +176,32 @@ export default {
             console.log("user found ? ",user);
 
             if (user) {
-                let check
-                try {
-                    const passwordMatched = await bcrypt.compare(pass, user.password)
-                    if (passwordMatched) {
-                        delete user.password
-                        resolve(user)
-                    } else {
-                        reject({
-                            status: 422
-                        })
-                    }
-                } catch (err) {
-                    console.log("err in brcypting ",err)
-                    reject(err)
+                // =========== new code
+                // let check
+                // try {
+                //     const passwordMatched = await bcrypt.compare(pass, user.password)
+                //     if (passwordMatched) {
+                //         delete user.password
+                //         resolve(user)
+                //     } else {
+                //         reject({
+                //             status: 422
+                //         })
+                //     }
+                // } catch (err) {
+                //     console.log("err in brcypting ",err)
+                //     reject(err)
+
+                //============== 
+                const passwordMatched = pass === user.password;
+                if (passwordMatched) {
+                    delete user.pass
+                    resolve(user)
+                } else {
+                    reject({
+                        status: 422
+                    })
+                //==========> old code
                 }
             } else {
                 reject({

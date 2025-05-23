@@ -1,7 +1,7 @@
 git_instructions.txt
 instructions.txt
 .env
-
+*.pem
 client/node_modules
 client/dist/
 server/node_modules

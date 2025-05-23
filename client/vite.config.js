@@ -27,9 +27,9 @@ export default defineConfig({
         display: "fullscreen",
         scope: "/",
         start_url: "/",
-        name: "ChatGPT",
-        short_name: "ChatGPT",
-        description: "ChatGPT OpenAI",
+        name: "AireStocks",
+        short_name: "AireStocks",
+        description: "AireStocks",
         icons: [
           {
             src: "/manifest/icon-192x192.png",

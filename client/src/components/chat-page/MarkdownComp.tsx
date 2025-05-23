@@ -218,7 +218,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       // Define regex patterns that should NOT wrap text
       const noWrapPatterns = [
         // Character count check - don't wrap if less than 100 characters
-        /^.{1,40}$/s, // Any text with 100 characters or less (including newlines)
+        /^.{1,26}$/s, // Any text with 26 characters or less (including newlines)
 
         // Add more regex patterns here as needed
         /^\d+$/, // Example: pure numbers
