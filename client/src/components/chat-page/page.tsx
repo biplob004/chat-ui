@@ -190,11 +190,19 @@ const ChatApp: React.FC = () => {
             try {
               const stream_data = JSON.parse(jsonString);
 
-              if (stream_data.status == "msg_stream") {
-                // here handle the streaming message
+              console.log("----->>>", stream_data);
 
+              // --------------------------------------------------------------Note
+
+              // status -> stream_type
+              // type -> action
+              // msg.content: 'text msg', msg.type : [text, table, md], msg.name: ['rpa', 'sco']
+
+              // Handle streaming messages in realtime
+              if (stream_data.stream_type == "msg_stream") {
                 if (stream_msgs == "") {
-                  // First add then below append only
+                  //checking if first streaming msg
+                  // First msg add then afterwards append only
                   setMessages((prev) => [
                     ...prev,
                     {
@@ -207,7 +215,7 @@ const ChatApp: React.FC = () => {
                   ]);
                 }
 
-                stream_msgs += stream_data.msg;
+                stream_msgs += stream_data.msg.content;
 
                 setMessages((prev) => {
                   const updatedMessages = [...prev];
@@ -219,31 +227,32 @@ const ChatApp: React.FC = () => {
 
                 return;
               } else {
-                //reset the variable if not stream_msg
+                //reset the variable if not stream_msg or at the end of streaming msgs
                 stream_msgs = "";
               }
 
               console.log(stream_data);
 
-              // For end node return/finish
+              // Handling langraph's end node -> (return or finish here)
               if (
-                stream_data.status === "node_stream" &&
+                stream_data.stream_type === "node_stream" &&
                 stream_data.node_name == "end_node"
               ) {
                 setLoader(false);
                 if (stream_data.chat_title) {
+                  // setting chat history title if available
                   setChatTitle(stream_data.chat_title);
                 }
                 return;
               }
 
-              //For interrupted msg return/finish here
-              if (stream_data.status === "interrupted_msg") {
+              // Handling interrupted msg return/finish here
+              if (stream_data.stream_type === "interrupted_msg") {
                 setMessages((prev) => [
                   ...prev,
                   {
                     id: uuidv4(),
-                    content: stream_data.msg,
+                    content: stream_data.msg.content,
                     isSentByUser: false,
                     fileNames: files?.map((f) => f.name) || [], // Update to array
                     avatarUrl: "/chat-gpt-icon.png",
@@ -254,63 +263,66 @@ const ChatApp: React.FC = () => {
                 return;
               }
 
+              // Handling all other messages && action: replace the recent msg with new msg
               if (
-                (stream_data.status === "node_stream" ||
-                  stream_data.status === "custom_stream" ||
-                  stream_data.status === "interrupted_msg") &&
-                stream_data.type === "update" &&
-                stream_data.msg != ""
+                (stream_data.stream_type === "node_stream" ||
+                  stream_data.stream_type === "custom_stream") &&
+                stream_data.action === "update" &&
+                stream_data.msg.content != ""
               ) {
-                // For overriting prev msg
+                // For replacing prev msg with new
                 setMessages((prev) => {
                   const updatedMessages = [...prev];
                   const lastMessage =
                     updatedMessages[updatedMessages.length - 1];
-                  lastMessage.content = stream_data.msg;
+                  lastMessage.content = stream_data.msg.content;
                   return updatedMessages;
                 });
-              } else if (stream_data.type === "add" && stream_data.msg != "") {
-                let message_ = stream_data.msg;
-                // Check if the message is a special message containing '@@@'
+              }
+              // action:  add messages
+              else if (
+                stream_data.action === "add" &&
+                stream_data.msg.content != ""
+              ) {
+                let message_ = stream_data.msg.content;
 
-                if (stream_data.msg.startsWith("@@@")) {
-                  // Try to extract template type and JSON data
-                  const match = stream_data.msg.match(/@@@(\w+)@@@(.*)/);
+                // Special messages: (table/form type) Check if the message is a special message containing '@@@'
 
-                  if (match) {
-                    const templateType = match[1]; // This captures the word between the first and second @@@
-                    const jsonString = match[2]; // This captures everything after the second @@@
+                if (
+                  stream_data.msg.type === "react-form" ||
+                  stream_data.msg.type === "html-form"
+                ) {
+                  const templateType = stream_data.msg.name; // Name of form type : RPA, SCO, TIMELINE
+                  const specialData = stream_data.msg.content; //Json data (str) here
 
-                    try {
-                      const specialData = JSON.parse(jsonString);
+                  try {
+                    // const specialData = JSON.parse(jsonString);
 
-                      if (templateType === "RPA") {
-                        setRpaFormData(specialData);
-                        setRPAFormOpen(true);
-                      } else if (templateType === "SCO") {
-                        setScoFormData(specialData);
-                        setSCOFormOpen(true);
-                      } else if (templateType === "TIMELINE") {
-                        setTimelineFormData(specialData);
-                        setTimelineFormOpen(true);
-                      } else if (templateType === "html_dashboard") {
-                        message_ = generateDashboardMessage(
-                          specialData,
-                          theme.palette.mode
-                        );
-                      } else if (templateType === "status_bar") {
-                        message_ = generateStatusTable(specialData);
-                      }
-                      // You can add more template types as needed
-                    } catch (error) {
-                      console.error(
-                        `Error parsing ${templateType} JSON:`,
-                        error
+                    if (templateType === "RPA") {
+                      setRpaFormData(specialData);
+                      setRPAFormOpen(true);
+                    } else if (templateType === "SCO") {
+                      setScoFormData(specialData);
+                      setSCOFormOpen(true);
+                    } else if (templateType === "TIMELINE") {
+                      setTimelineFormData(specialData);
+                      setTimelineFormOpen(true);
+                    } else if (templateType === "html_dashboard") {
+                      message_ = generateDashboardMessage(
+                        specialData,
+                        theme.palette.mode
                       );
+                    } else if (templateType === "status_bar") {
+                      message_ = generateStatusTable(specialData);
                     }
+                    // You can add more template types as needed
+                  } catch (error) {
+                    console.error(`Error parsing ${templateType} JSON:`, error);
                   }
-                } else {
-                  // Not to show anything if it starts with @@@ (for form data)
+                }
+
+                // Non-Special messages: (normal text messages)
+                else {
                   setMessages((prev) => [
                     ...prev,
                     {
@@ -365,22 +377,23 @@ const ChatApp: React.FC = () => {
         messages_data.forEach((msg: { role: string; content: string }) => {
           // Check if the message is a special message starting with '@@@'
           let message_ = msg.content;
-          if (msg.content.startsWith("@@@")) {
-            const jsonString = msg.content.slice(3); // Removing the '@@@' prefix
-            try {
-              const specialData = JSON.parse(jsonString);
-              if (specialData["template"] == "html_dashboard") {
-                message_ = generateDashboardMessage(
-                  specialData["data"],
-                  theme.palette.mode
-                );
-              } else if (specialData["template"] == "status_bar") {
-                message_ = generateStatusTable(specialData["data"]);
-              }
-            } catch (error) {
-              console.error("Error parsing special JSON:", error);
-            }
-          }
+
+          // if (msg.content.startsWith("@@@")) {
+          //   const jsonString = msg.content.slice(3); // Removing the '@@@' prefix
+          //   try {
+          //     const specialData = JSON.parse(jsonString);
+          //     if (specialData["template"] == "html_dashboard") {
+          //       message_ = generateDashboardMessage(
+          //         specialData["data"],
+          //         theme.palette.mode
+          //       );
+          //     } else if (specialData["template"] == "status_bar") {
+          //       message_ = generateStatusTable(specialData["data"]);
+          //     }
+          //   } catch (error) {
+          //     console.error("Error parsing special JSON:", error);
+          //   }
+          // }
 
           setMessages((prev) => [
             ...prev,
