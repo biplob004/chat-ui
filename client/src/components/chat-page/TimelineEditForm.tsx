@@ -14,6 +14,7 @@ import {
   FormControl,
   InputLabel,
   Box,
+  TextField,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -24,6 +25,7 @@ import { useThemeContext } from "./ThemeContext";
 interface TimelineItem {
   "Process Step": string;
   Owner: string;
+  Comment?: string;
   "Due Date": Date | string;
   Status: string;
   list_index?: number;
@@ -66,6 +68,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
           return {
             "Process Step": item["Process Step"],
             Owner: item["Owner"],
+            Comment: item["Comment"] || "",
             "Due Date":
               typeof item["Due Date"] === "string"
                 ? item["Due Date"]
@@ -113,11 +116,20 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     });
   };
 
+  const handleCommentChange = (index: number, comment: string) => {
+    const newTimelineData = [...formData.timeline_data_dict_list];
+    newTimelineData[index]["Comment"] = comment;
+    setFormData({
+      ...formData,
+      timeline_data_dict_list: newTimelineData,
+    });
+  };
+
   const generateMarkdownTable = (data: TimelineItem[]) => {
     let markdown = "# Project Timeline\n\n";
 
-    markdown += "| Process Step | Owner | Due Date | Status |\n";
-    markdown += "| --- | --- | --- | --- |\n";
+    markdown += "| Process Step | Owner | Comment | Due Date | Status |\n";
+    markdown += "| --- | --- | --- | --- | --- |\n";
 
     data.forEach((item) => {
       const dueDate =
@@ -125,7 +137,11 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
           ? item["Due Date"]
           : format(item["Due Date"] as Date, "yyyy-MM-dd");
 
-      markdown += `| ${item["Process Step"]} | ${item["Owner"]} | ${dueDate} | ${item["Status"]} |\n`;
+      const comment = item["Comment"] || "";
+      // Replace newlines with <br> for markdown display
+      const formattedComment = comment.replace(/\n/g, "<br>");
+
+      markdown += `| ${item["Process Step"]} | ${item["Owner"]} | ${formattedComment} | ${dueDate} | ${item["Status"]} |\n`;
     });
 
     return markdown;
@@ -211,10 +227,10 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                   <Grid
                     container
                     spacing={{ xs: 2, md: 3 }}
-                    alignItems="center"
+                    alignItems="flex-start"
                   >
                     {/* Process Step - Read Only */}
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={2.4}>
                       <Typography
                         variant="body2"
                         color="text.secondary"
@@ -228,7 +244,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                     </Grid>
 
                     {/* Owner - Read Only */}
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={2.4}>
                       <Typography
                         variant="body2"
                         color="text.secondary"
@@ -241,8 +257,28 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                       </Typography>
                     </Grid>
 
+                    {/* Comment - Editable */}
+                    <Grid item xs={12} md={2.4}>
+                      <TextField
+                        label="Comment"
+                        multiline
+                        rows={2}
+                        value={item["Comment"] || ""}
+                        onChange={(e) =>
+                          handleCommentChange(index, e.target.value)
+                        }
+                        fullWidth
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            backgroundColor: theme.palette.chat_input.text_box,
+                          },
+                        }}
+                        placeholder="Add your comments here..."
+                      />
+                    </Grid>
+
                     {/* Due Date - Editable */}
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={2.4}>
                       <DatePicker
                         label="Due Date"
                         value={parseDate(item["Due Date"])}
@@ -257,7 +293,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
                     </Grid>
 
                     {/* Status - Editable */}
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={2.4}>
                       <FormControl fullWidth>
                         <InputLabel>Status</InputLabel>
                         <Select
