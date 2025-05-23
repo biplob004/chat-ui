@@ -36,6 +36,7 @@ interface FormData {
   timeline_data_dict_list: TimelineItem[];
   address_from_rpa_doc: string;
   rpa_version: string;
+  editable_fields: string[];
 }
 
 interface TimelineEditFormProps {
@@ -58,6 +59,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     timeline_data_dict_list: [],
     address_from_rpa_doc: "",
     rpa_version: "",
+    editable_fields: [],
   });
 
   // Initialize form data with proper structure
@@ -223,110 +225,166 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
               </Typography>
             </Grid>
 
-            {formData.timeline_data_dict_list.map((item, index) => (
-              <Grid item xs={12} key={index}>
-                <Box
-                  sx={{
-                    p: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    borderRadius: 1,
-                    backgroundColor: theme.palette.background.default,
-                  }}
-                >
-                  <Grid
-                    container
-                    spacing={{ xs: 2, md: 3 }}
-                    alignItems="flex-start"
+            {formData.timeline_data_dict_list.map((item, index) => {
+              const isEditable = formData.editable_fields?.includes(
+                item["Process Step"]
+              );
+
+              return (
+                <Grid item xs={12} key={index}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      border: `1px solid ${theme.palette.divider}`,
+                      borderRadius: 1,
+                      backgroundColor: theme.palette.background.default,
+                    }}
                   >
-                    {/* Process Step - Read Only */}
-                    <Grid item xs={12} md={2.4}>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Process Step
-                      </Typography>
-                      <Typography variant="body1" fontWeight="medium">
-                        {item["Process Step"]}
-                      </Typography>
-                    </Grid>
-
-                    {/* Owner - Read Only */}
-                    <Grid item xs={12} md={2.4}>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        gutterBottom
-                      >
-                        Owner
-                      </Typography>
-                      <Typography variant="body1" fontWeight="medium">
-                        {item["Owner"]}
-                      </Typography>
-                    </Grid>
-
-                    {/* Due Date - Editable */}
-                    <Grid item xs={12} md={2.4}>
-                      <DatePicker
-                        label="Due Date"
-                        value={parseDate(item["Due Date"])}
-                        onChange={(date) => handleDateChange(index, date)}
-                        sx={{
-                          width: "100%",
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: theme.palette.chat_input.text_box,
-                          },
-                        }}
-                      />
-                    </Grid>
-
-                    {/* Comment - Editable */}
-                    <Grid item xs={12} md={2.4}>
-                      <TextField
-                        label="Comment"
-                        multiline
-                        rows={2}
-                        value={item["Comment"] || ""}
-                        onChange={(e) =>
-                          handleCommentChange(index, e.target.value)
-                        }
-                        fullWidth
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            backgroundColor: theme.palette.chat_input.text_box,
-                          },
-                        }}
-                        placeholder="Add your comments here..."
-                      />
-                    </Grid>
-
-                    {/* Status - Editable */}
-                    <Grid item xs={12} md={2.4}>
-                      <FormControl fullWidth>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                          value={item["Status"]}
-                          label="Status"
-                          onChange={(e) =>
-                            handleStatusChange(index, e.target.value)
-                          }
-                          sx={{
-                            backgroundColor: theme.palette.chat_input.text_box,
-                          }}
+                    <Grid
+                      container
+                      spacing={{ xs: 2, md: 3 }}
+                      alignItems="flex-start"
+                    >
+                      {/* Process Step - Read Only */}
+                      <Grid item xs={12} md={2.4}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          gutterBottom
                         >
-                          {statusOptions.map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                          Process Step
+                        </Typography>
+                        <Typography variant="body1" fontWeight="medium">
+                          {item["Process Step"]}
+                        </Typography>
+                      </Grid>
+
+                      {/* Owner - Read Only */}
+                      <Grid item xs={12} md={2.4}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          gutterBottom
+                        >
+                          Owner
+                        </Typography>
+                        <Typography variant="body1" fontWeight="medium">
+                          {item["Owner"]}
+                        </Typography>
+                      </Grid>
+
+                      {/* Due Date - Conditionally Editable */}
+                      <Grid item xs={12} md={2.4}>
+                        {isEditable ? (
+                          <DatePicker
+                            label="Due Date"
+                            value={parseDate(item["Due Date"])}
+                            onChange={(date) => handleDateChange(index, date)}
+                            sx={{
+                              width: "100%",
+                              "& .MuiOutlinedInput-root": {
+                                backgroundColor:
+                                  theme.palette.chat_input.text_box,
+                              },
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              gutterBottom
+                            >
+                              Due Date
+                            </Typography>
+                            <Typography variant="body1" fontWeight="medium">
+                              {item["Due Date"] instanceof Date
+                                ? format(item["Due Date"] as Date, "yyyy-MM-dd")
+                                : item["Due Date"]?.toString() || "N/A"}
+                            </Typography>
+                          </>
+                        )}
+                      </Grid>
+
+                      {/* Comment - Conditionally Editable */}
+                      <Grid item xs={12} md={2.4}>
+                        {isEditable ? (
+                          <TextField
+                            label="Comment"
+                            multiline
+                            rows={2}
+                            value={item["Comment"] || ""}
+                            onChange={(e) =>
+                              handleCommentChange(index, e.target.value)
+                            }
+                            fullWidth
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                backgroundColor:
+                                  theme.palette.chat_input.text_box,
+                              },
+                            }}
+                            placeholder="Add your comments here..."
+                          />
+                        ) : (
+                          <>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              gutterBottom
+                            >
+                              Comment
+                            </Typography>
+                            <Typography variant="body1" fontWeight="medium">
+                              {item["Comment"] || "N/A"}
+                            </Typography>
+                          </>
+                        )}
+                      </Grid>
+
+                      {/* Status - Conditionally Editable */}
+                      <Grid item xs={12} md={2.4}>
+                        {isEditable ? (
+                          <FormControl fullWidth>
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                              value={item["Status"]}
+                              label="Status"
+                              onChange={(e) =>
+                                handleStatusChange(index, e.target.value)
+                              }
+                              sx={{
+                                backgroundColor:
+                                  theme.palette.chat_input.text_box,
+                              }}
+                            >
+                              {statusOptions.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                  {option}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        ) : (
+                          <>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              gutterBottom
+                            >
+                              Status
+                            </Typography>
+                            <Typography variant="body1" fontWeight="medium">
+                              {item["Status"] || "N/A"}
+                            </Typography>
+                          </>
+                        )}
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </Box>
-              </Grid>
-            ))}
+                  </Box>
+                </Grid>
+              );
+            })}
           </Grid>
         </DialogContent>
 
