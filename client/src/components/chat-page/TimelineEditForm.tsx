@@ -5,7 +5,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Button,
   Typography,
   useTheme,
@@ -14,6 +13,7 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Box,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -25,7 +25,6 @@ interface TimelineItem {
   "Process Step": string;
   Owner: string;
   "Due Date": Date | string;
-  "Actual Close Date": Date | string;
   Status: string;
   list_index?: number;
 }
@@ -65,19 +64,16 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
       const processedTimelineData =
         initialData.timeline_data_dict_list?.map((item) => {
           return {
-            ...item,
+            "Process Step": item["Process Step"],
+            Owner: item["Owner"],
             "Due Date":
               typeof item["Due Date"] === "string"
                 ? item["Due Date"]
                 : item["Due Date"] instanceof Date
                   ? item["Due Date"]
                   : new Date(item["Due Date"]),
-            "Actual Close Date":
-              typeof item["Actual Close Date"] === "string"
-                ? item["Actual Close Date"]
-                : item["Actual Close Date"] instanceof Date
-                  ? item["Actual Close Date"]
-                  : new Date(item["Actual Close Date"]),
+            Status: item["Status"],
+            list_index: item.list_index,
           };
         }) || [];
 
@@ -97,27 +93,10 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     }
   }, [initialData]);
 
-  const handleTextChange = (
-    index: number,
-    key: keyof TimelineItem,
-    value: string
-  ) => {
-    const newTimelineData = [...formData.timeline_data_dict_list];
-    (newTimelineData[index][key] as string | number | Date | undefined) = value;
-    setFormData({
-      ...formData,
-      timeline_data_dict_list: newTimelineData,
-    });
-  };
-
-  const handleDateChange = (
-    index: number,
-    key: "Due Date" | "Actual Close Date",
-    date: Date | null
-  ) => {
+  const handleDateChange = (index: number, date: Date | null) => {
     if (date) {
       const newTimelineData = [...formData.timeline_data_dict_list];
-      newTimelineData[index][key] = date;
+      newTimelineData[index]["Due Date"] = date;
       setFormData({
         ...formData,
         timeline_data_dict_list: newTimelineData,
@@ -134,37 +113,11 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     });
   };
 
-  const addTimelineItem = () => {
-    setFormData({
-      ...formData,
-      timeline_data_dict_list: [
-        ...formData.timeline_data_dict_list,
-        {
-          "Process Step": "",
-          Owner: "",
-          "Due Date": new Date(),
-          "Actual Close Date": new Date(),
-          Status: "pending",
-        },
-      ],
-    });
-  };
-
-  const removeTimelineItem = (index: number) => {
-    const newTimelineData = [...formData.timeline_data_dict_list];
-    newTimelineData.splice(index, 1);
-    setFormData({
-      ...formData,
-      timeline_data_dict_list: newTimelineData,
-    });
-  };
-
   const generateMarkdownTable = (data: TimelineItem[]) => {
     let markdown = "# Project Timeline\n\n";
 
-    markdown +=
-      "| Process Step | Owner | Due Date | Actual Close Date | Status |\n";
-    markdown += "| --- | --- | --- | --- | --- |\n";
+    markdown += "| Process Step | Owner | Due Date | Status |\n";
+    markdown += "| --- | --- | --- | --- |\n";
 
     data.forEach((item) => {
       const dueDate =
@@ -172,12 +125,7 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
           ? item["Due Date"]
           : format(item["Due Date"] as Date, "yyyy-MM-dd");
 
-      const actualCloseDate =
-        typeof item["Actual Close Date"] === "string"
-          ? item["Actual Close Date"]
-          : format(item["Actual Close Date"] as Date, "yyyy-MM-dd");
-
-      markdown += `| ${item["Process Step"]} | ${item["Owner"]} | ${dueDate} | ${actualCloseDate} | ${item["Status"]} |\n`;
+      markdown += `| ${item["Process Step"]} | ${item["Owner"]} | ${dueDate} | ${item["Status"]} |\n`;
     });
 
     return markdown;
@@ -213,7 +161,6 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
   };
 
   const statusOptions = ["pending", "in progress", "completed", "delayed"];
-  const ownerOptions = ["Agent", "Title", "Lender", "Buyer", "Seller"];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -252,134 +199,89 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
             </Grid>
 
             {formData.timeline_data_dict_list.map((item, index) => (
-              <React.Fragment key={index}>
-                <Grid item xs={12}>
-                  <Typography
-                    variant="subtitle1"
-                    gutterBottom
-                    sx={{ mt: 2, fontWeight: "bold" }}
+              <Grid item xs={12} key={index}>
+                <Box
+                  sx={{
+                    p: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                    borderRadius: 1,
+                    backgroundColor: theme.palette.background.default,
+                  }}
+                >
+                  <Grid
+                    container
+                    spacing={{ xs: 2, md: 3 }}
+                    alignItems="center"
                   >
-                    Item {index + 1}
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => removeTimelineItem(index)}
-                      sx={{ ml: 2 }}
-                    >
-                      Remove
-                    </Button>
-                  </Typography>
-                </Grid>
+                    {/* Process Step - Read Only */}
+                    <Grid item xs={12} md={3}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Process Step
+                      </Typography>
+                      <Typography variant="body1" fontWeight="medium">
+                        {item["Process Step"]}
+                      </Typography>
+                    </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Process Step"
-                    value={item["Process Step"]}
-                    onChange={(e) =>
-                      handleTextChange(index, "Process Step", e.target.value)
-                    }
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: theme.palette.chat_input.text_box,
-                      },
-                    }}
-                  />
-                </Grid>
+                    {/* Owner - Read Only */}
+                    <Grid item xs={12} md={3}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        gutterBottom
+                      >
+                        Owner
+                      </Typography>
+                      <Typography variant="body1" fontWeight="medium">
+                        {item["Owner"]}
+                      </Typography>
+                    </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Owner</InputLabel>
-                    <Select
-                      value={item["Owner"]}
-                      label="Owner"
-                      onChange={(e) =>
-                        handleTextChange(index, "Owner", e.target.value)
-                      }
-                      sx={{
-                        backgroundColor: theme.palette.chat_input.text_box,
-                      }}
-                    >
-                      {ownerOptions.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                      <MenuItem value="Other">Other</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
+                    {/* Due Date - Editable */}
+                    <Grid item xs={12} md={3}>
+                      <DatePicker
+                        label="Due Date"
+                        value={parseDate(item["Due Date"])}
+                        onChange={(date) => handleDateChange(index, date)}
+                        sx={{
+                          width: "100%",
+                          "& .MuiOutlinedInput-root": {
+                            backgroundColor: theme.palette.chat_input.text_box,
+                          },
+                        }}
+                      />
+                    </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <DatePicker
-                    label="Due Date"
-                    value={parseDate(item["Due Date"])}
-                    onChange={(date) =>
-                      handleDateChange(index, "Due Date", date)
-                    }
-                    sx={{
-                      width: "100%",
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: theme.palette.chat_input.text_box,
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <DatePicker
-                    label="Actual Close Date"
-                    value={parseDate(item["Actual Close Date"])}
-                    onChange={(date) =>
-                      handleDateChange(index, "Actual Close Date", date)
-                    }
-                    sx={{
-                      width: "100%",
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: theme.palette.chat_input.text_box,
-                      },
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={item["Status"]}
-                      label="Status"
-                      onChange={(e) =>
-                        handleStatusChange(index, e.target.value)
-                      }
-                      sx={{
-                        backgroundColor: theme.palette.chat_input.text_box,
-                      }}
-                    >
-                      {statusOptions.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </React.Fragment>
+                    {/* Status - Editable */}
+                    <Grid item xs={12} md={3}>
+                      <FormControl fullWidth>
+                        <InputLabel>Status</InputLabel>
+                        <Select
+                          value={item["Status"]}
+                          label="Status"
+                          onChange={(e) =>
+                            handleStatusChange(index, e.target.value)
+                          }
+                          sx={{
+                            backgroundColor: theme.palette.chat_input.text_box,
+                          }}
+                        >
+                          {statusOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
             ))}
-
-            <Grid item xs={12} sx={{ mt: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={addTimelineItem}
-                sx={{
-                  color: theme.palette.text.primary,
-                  borderColor: theme.palette.text.primary,
-                }}
-              >
-                Add Timeline Item
-              </Button>
-            </Grid>
           </Grid>
         </DialogContent>
 
