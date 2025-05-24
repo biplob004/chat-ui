@@ -270,7 +270,10 @@ const DocumentEditForm: React.FC<DocumentEditFormProps> = ({
   const handleSubmit = () => {
     const markdownTable = generateMarkdownTable(formData);
     console.log("Final JSON data:", JSON.stringify(formData, null, 2));
-    onSubmit(markdownTable, "@@@RPA@@@" + JSON.stringify(formData, null, 2));
+    onSubmit(
+      markdownTable,
+      JSON.stringify({ data: formData, marker: "RPA" }, null, 2)
+    );
 
     onClose();
   };

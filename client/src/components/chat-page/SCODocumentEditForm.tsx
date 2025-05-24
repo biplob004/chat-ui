@@ -205,8 +205,11 @@ const SCODocumentEditForm: React.FC<SCODocumentEditFormProps> = ({
 
   const handleSubmit = () => {
     const markdownTable = generateMarkdownTable(formData);
-    console.log("Final JSON data:", JSON.stringify(formData, null, 2));
-    onSubmit(markdownTable, "@@@SCO@@@" + JSON.stringify(formData, null, 2));
+
+    onSubmit(
+      markdownTable,
+      JSON.stringify({ data: formData, marker: "SCO" }, null, 2)
+    );
     onClose();
   };
 

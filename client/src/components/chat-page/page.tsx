@@ -147,7 +147,20 @@ const ChatApp: React.FC = () => {
 
       setMessages((prev) => [...prev, newMessage]);
 
-      formData.append("message", raw_data != "" ? raw_data : message);
+      if (raw_data == "") {
+        // No raw data
+        formData.append(
+          "message",
+          JSON.stringify({ type: "text", data: "{}", message: message })
+        );
+      } else {
+        // This is table data | json
+        formData.append(
+          "message",
+          JSON.stringify({ type: "json", data: raw_data, message: message })
+        );
+      }
+
       formData.append("chatId", chatId);
       formData.append("auth_token", authToken ?? "");
 
@@ -192,11 +205,13 @@ const ChatApp: React.FC = () => {
 
               console.log("----->>>", stream_data);
 
-              // --------------------------------------------------------------Note
+              // ----------- stream_data --------
 
-              // status -> stream_type
-              // type -> action
-              // msg.content: 'text msg', msg.type : [text, table, md], msg.name: ['rpa', 'sco']
+              // stream_data.stream_type : ['node_stream', 'msg_stream', 'interrupted_msg']
+              // stream_data.action : ['add', 'update']
+              // stream_data.msg.content: 'text msg',
+              // stream_data.msg.type : ['reat-form', 'text', 'html-form'],
+              // stream_data.msg.name: ['RPA', 'SCO', 'TIMELINE']
 
               // Handle streaming messages in realtime
               if (stream_data.stream_type == "msg_stream") {
@@ -270,7 +285,7 @@ const ChatApp: React.FC = () => {
                 stream_data.action === "update" &&
                 stream_data.msg.content != ""
               ) {
-                // For replacing prev msg with new
+                // action: update | For replacing prev msg with new
                 setMessages((prev) => {
                   const updatedMessages = [...prev];
                   const lastMessage =
@@ -293,10 +308,10 @@ const ChatApp: React.FC = () => {
                   stream_data.msg.type === "html-form"
                 ) {
                   const templateType = stream_data.msg.name; // Name of form type : RPA, SCO, TIMELINE
-                  const specialData = stream_data.msg.content; //Json data (str) here
+                  const jsonString = stream_data.msg.content; //Json data (str) here
 
                   try {
-                    // const specialData = JSON.parse(jsonString);
+                    const specialData = JSON.parse(jsonString);
 
                     if (templateType === "RPA") {
                       setRpaFormData(specialData);
@@ -377,6 +392,8 @@ const ChatApp: React.FC = () => {
         messages_data.forEach((msg: { role: string; content: string }) => {
           // Check if the message is a special message starting with '@@@'
           let message_ = msg.content;
+
+          // These html table shold not be in the conversation, instead simply display at realtime and disappear; or keep the markdown data afterwards
 
           // if (msg.content.startsWith("@@@")) {
           //   const jsonString = msg.content.slice(3); // Removing the '@@@' prefix

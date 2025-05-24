@@ -162,10 +162,10 @@ const TimelineEditForm: React.FC<TimelineEditFormProps> = ({
     const markdownTable = generateMarkdownTable(
       formData.timeline_data_dict_list
     );
-    console.log("Final JSON data:", JSON.stringify(formData, null, 2));
+
     onSubmit(
       markdownTable,
-      "@@@TIMELINE@@@" + JSON.stringify(formData, null, 2)
+      JSON.stringify({ data: formData, marker: "TIMELINE" }, null, 2)
     );
     onClose();
   };
